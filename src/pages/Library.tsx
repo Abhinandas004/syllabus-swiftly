@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Download, Eye, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { PdfPreviewModal } from "@/components/PdfPreviewModal";
+import { generatePdfContent, downloadPdf, type NoteContent } from "@/utils/pdfGenerator";
 
 const Library = () => {
   const { toast } = useToast();
+  const [showPreview, setShowPreview] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<NoteContent | null>(null);
 
   const sampleNotes = [
     {
@@ -62,23 +67,68 @@ const Library = () => {
     },
   ];
 
-  const handleDownload = (title: string, isPremium: boolean) => {
-    if (isPremium) {
+  const handlePreview = (note: typeof sampleNotes[0]) => {
+    if (note.isPremium) {
       toast({
         title: "Premium Content",
         description: "Upgrade to premium to access this sample note.",
         variant: "destructive",
       });
     } else {
+      const noteContent: NoteContent = {
+        title: note.title,
+        subject: note.subject,
+        topics: note.topics,
+        isPremium: note.isPremium,
+      };
+      setSelectedNote(noteContent);
+      setShowPreview(true);
+    }
+  };
+
+  const handleDownload = (note: typeof sampleNotes[0]) => {
+    if (note.isPremium) {
+      toast({
+        title: "Premium Content",
+        description: "Upgrade to premium to access this sample note.",
+        variant: "destructive",
+      });
+    } else {
+      const noteContent: NoteContent = {
+        title: note.title,
+        subject: note.subject,
+        topics: note.topics,
+        isPremium: note.isPremium,
+      };
+      downloadPdf(noteContent);
       toast({
         title: "Download started!",
-        description: `${title} sample notes are being downloaded.`,
+        description: `${note.title} is being downloaded.`,
+      });
+    }
+  };
+
+  const handleDownloadFromPreview = () => {
+    if (selectedNote) {
+      downloadPdf(selectedNote);
+      toast({
+        title: "Download started!",
+        description: "Your PDF is being downloaded.",
       });
     }
   };
 
   return (
     <div className="min-h-screen">
+      {selectedNote && (
+        <PdfPreviewModal
+          open={showPreview}
+          onClose={() => setShowPreview(false)}
+          pdfContent={generatePdfContent(selectedNote)}
+          title={selectedNote.title}
+          onDownload={handleDownloadFromPreview}
+        />
+      )}
       {/* Hero */}
       <section className="bg-gradient-to-br from-background via-primary/5 to-secondary/5 py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -149,7 +199,7 @@ const Library = () => {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => handleDownload(note.title, note.isPremium)}
+                    onClick={() => handlePreview(note)}
                   >
                     {note.isPremium ? (
                       <>
@@ -167,7 +217,7 @@ const Library = () => {
                     variant={note.isPremium ? "secondary" : "default"}
                     size="sm"
                     className="flex-1"
-                    onClick={() => handleDownload(note.title, note.isPremium)}
+                    onClick={() => handleDownload(note)}
                   >
                     <Download className="h-4 w-4 mr-1" />
                     Download

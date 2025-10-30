@@ -4,10 +4,14 @@ import { Upload, FileText, Download, CheckCircle, Star, Sparkles, Lock } from "l
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import heroBanner from "@/assets/hero-banner.jpg";
+import { PdfPreviewModal } from "@/components/PdfPreviewModal";
+import { generatePdfContent, downloadPdf, type NoteContent } from "@/utils/pdfGenerator";
 
 const Home = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [generatedNote, setGeneratedNote] = useState<NoteContent | null>(null);
   const { toast } = useToast();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,16 +38,45 @@ const Home = () => {
     setIsGenerating(true);
     // Simulate AI processing
     setTimeout(() => {
+      // Generate sample note based on file name
+      const noteContent: NoteContent = {
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        subject: "Computer Science",
+        topics: ["Introduction to the Topic", "Core Concepts", "Practical Applications", "Key Formulas and Methods", "Practice Problems"],
+      };
+      
+      setGeneratedNote(noteContent);
       setIsGenerating(false);
+      setShowPreview(true);
+      
       toast({
         title: "Notes generated!",
-        description: "Your study notes are ready for download.",
+        description: "Your study notes are ready for preview and download.",
       });
     }, 3000);
   };
 
+  const handleDownloadPdf = () => {
+    if (generatedNote) {
+      downloadPdf(generatedNote);
+      toast({
+        title: "Download started!",
+        description: "Your PDF is being downloaded.",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen">
+      {generatedNote && (
+        <PdfPreviewModal
+          open={showPreview}
+          onClose={() => setShowPreview(false)}
+          pdfContent={generatePdfContent(generatedNote)}
+          title={generatedNote.title}
+          onDownload={handleDownloadPdf}
+        />
+      )}
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-secondary/5">
         <div className="absolute inset-0 opacity-10">
