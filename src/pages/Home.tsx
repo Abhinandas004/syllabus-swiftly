@@ -25,6 +25,63 @@ const Home = () => {
     }
   };
 
+  const parseSyllabusContent = (text: string): { subject: string; topics: string[] } => {
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    
+    // Try to detect subject from filename or first lines
+    let subject = "General Studies";
+    const subjectKeywords = ['computer', 'chemistry', 'physics', 'biology', 'mathematics', 'business', 'economics', 'engineering', 'medicine', 'history'];
+    const textLower = text.toLowerCase();
+    
+    for (const keyword of subjectKeywords) {
+      if (textLower.includes(keyword)) {
+        subject = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+        break;
+      }
+    }
+    
+    // Extract topics - look for patterns like numbers, bullets, or chapter headings
+    const topics: string[] = [];
+    const topicPatterns = [
+      /^(?:\d+\.|\d+\)|\*|-|•)\s*(.+)$/,  // Numbered or bulleted
+      /^(?:chapter|unit|topic|module|section)\s*\d*:?\s*(.+)$/i,  // Chapter/Unit headings
+      /^([A-Z][^.!?]*[A-Za-z])$/  // Capitalized lines (likely headings)
+    ];
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine.length < 5 || trimmedLine.length > 100) continue; // Skip too short/long
+      
+      for (const pattern of topicPatterns) {
+        const match = trimmedLine.match(pattern);
+        if (match) {
+          const topic = match[1] || trimmedLine;
+          if (!topics.includes(topic) && topics.length < 15) {
+            topics.push(topic.trim());
+          }
+          break;
+        }
+      }
+    }
+    
+    // If no topics found, create from main lines
+    if (topics.length === 0) {
+      lines.slice(0, 10).forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed.length > 10 && trimmed.length < 100 && topics.length < 10) {
+          topics.push(trimmed);
+        }
+      });
+    }
+    
+    // Fallback if still no topics
+    if (topics.length === 0) {
+      topics.push("Introduction", "Core Concepts", "Key Topics", "Applications", "Summary");
+    }
+    
+    return { subject, topics };
+  };
+
   const handleGenerate = () => {
     if (!file) {
       toast({
@@ -36,13 +93,18 @@ const Home = () => {
     }
 
     setIsGenerating(true);
-    // Simulate AI processing
-    setTimeout(() => {
-      // Generate sample note based on file name
+    
+    // Read file content
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const { subject, topics } = parseSyllabusContent(text);
+      
+      // Generate note based on actual syllabus content
       const noteContent: NoteContent = {
         title: file.name.replace(/\.[^/.]+$/, ""),
-        subject: "Computer Science",
-        topics: ["Introduction to the Topic", "Core Concepts", "Practical Applications", "Key Formulas and Methods", "Practice Problems"],
+        subject: subject,
+        topics: topics,
       };
       
       setGeneratedNote(noteContent);
@@ -53,7 +115,18 @@ const Home = () => {
         title: "Notes generated!",
         description: "Your study notes are ready for preview and download.",
       });
-    }, 3000);
+    };
+    
+    reader.onerror = () => {
+      toast({
+        title: "Error reading file",
+        description: "Please try uploading the file again.",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+    };
+    
+    reader.readAsText(file);
   };
 
   const handleDownloadPdf = () => {

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -161,7 +162,7 @@ const Contact = () => {
                   and account management.
                 </p>
                 <Button variant="outline" asChild>
-                  <a href="/faq">Visit FAQ</a>
+                  <Link to="/faq">Visit FAQ</Link>
                 </Button>
               </div>
             </div>
