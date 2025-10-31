@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { PdfPreviewModal } from "@/components/PdfPreviewModal";
 import { generatePdfContent, downloadPdf, type NoteContent } from "@/utils/pdfGenerator";
+import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -131,6 +132,12 @@ const Home = () => {
     
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     
+    // For images, use AI analysis
+    if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png') {
+      analyzeImageWithAI();
+      return;
+    }
+    
     // For text files, try to parse content
     if (fileExtension === 'txt') {
       const reader = new FileReader();
@@ -160,7 +167,7 @@ const Home = () => {
       
       reader.readAsText(file);
     } else {
-      // For other file types (PDF, DOC, DOCX, images), generate smart fallback
+      // For other file types (PDF, DOC, DOCX), generate smart fallback
       setTimeout(() => {
         generateFallbackNotes();
       }, 2000);
@@ -187,6 +194,66 @@ const Home = () => {
       title: "Notes generated!",
       description: "Your study notes are ready for preview and download.",
     });
+  };
+  
+  const analyzeImageWithAI = async () => {
+    if (!file) return;
+    
+    setIsGenerating(true);
+    
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      const imageData = await base64Promise;
+      
+      // Call the edge function to analyze the image
+      const { data, error } = await supabase.functions.invoke('analyze-syllabus', {
+        body: { imageData }
+      });
+      
+      if (error) {
+        console.error('Error calling analyze-syllabus:', error);
+        throw error;
+      }
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      if (data.success && data.analysis) {
+        const noteContent: NoteContent = {
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          subject: data.analysis.subject,
+          modules: data.analysis.modules,
+        };
+        
+        setGeneratedNote(noteContent);
+        setIsGenerating(false);
+        setShowPreview(true);
+        
+        toast({
+          title: "AI Analysis Complete!",
+          description: "Your detailed study notes are ready for preview and download.",
+        });
+      } else {
+        throw new Error('Invalid response from AI analysis');
+      }
+    } catch (error) {
+      console.error('Error analyzing syllabus:', error);
+      toast({
+        title: "Analysis failed",
+        description: error instanceof Error ? error.message : "Using fallback method...",
+        variant: "destructive",
+      });
+      // Fallback to simple generation
+      generateFallbackNotes();
+    }
   };
 
   const handleDownloadPdf = () => {

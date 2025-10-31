@@ -1,0 +1,4 @@
+project_id = "xubehgmumvxtcwjeuhlr"
+
+[functions.analyze-syllabus]
+verify_jwt = false

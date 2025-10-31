@@ -1,14 +1,30 @@
 import jsPDF from 'jspdf';
 
+export interface Chapter {
+  name: string;
+  description: string;
+  keyPoints: string[];
+  applications: string;
+}
+
+export interface Module {
+  name: string;
+  chapters: Chapter[];
+}
+
 export interface NoteContent {
   title: string;
   subject: string;
-  topics: string[];
+  topics?: string[];
+  modules?: Module[];
   isPremium?: boolean;
 }
 
 export const generatePdfContent = (content: NoteContent): string => {
-  const { title, subject, topics } = content;
+  const { title, subject, topics, modules } = content;
+  
+  // Generate content based on whether we have AI-analyzed modules or simple topics
+  const mainContent = modules ? generateModuleContent(modules) : generateTopicContent(topics || []);
   
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -19,23 +35,7 @@ export const generatePdfContent = (content: NoteContent): string => {
         <strong>Subject:</strong> ${subject}
       </p>
       
-      <h2 style="color: #7c3aed; margin-top: 30px;">Topics Covered:</h2>
-      <ul style="list-style-type: none; padding-left: 0;">
-        ${topics.map(topic => `
-          <li style="background: #f3f4f6; margin: 10px 0; padding: 15px; border-left: 4px solid #2563eb; border-radius: 4px;">
-            <h3 style="color: #1f2937; margin: 0 0 10px 0;">${topic}</h3>
-            <p style="color: #4b5563; margin: 0;">
-              ${getTopicDescription(topic)}
-            </p>
-            <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px;">
-              <strong style="color: #2563eb;">Key Points:</strong>
-              <ul style="margin: 5px 0; padding-left: 20px;">
-                ${getKeyPoints(topic).map(point => `<li style="color: #374151;">${point}</li>`).join('')}
-              </ul>
-            </div>
-          </li>
-        `).join('')}
-      </ul>
+      ${mainContent}
       
       <div style="margin-top: 40px; padding: 20px; background: #eff6ff; border-radius: 8px; border: 1px solid #2563eb;">
         <h3 style="color: #2563eb; margin-top: 0;">Study Tips:</h3>
@@ -85,6 +85,65 @@ const getTopicDescription = (topic: string): string => {
   };
   
   return descriptions[topic] || `Comprehensive coverage of ${topic} including fundamental concepts, practical applications, and key theoretical foundations.`;
+};
+
+const generateModuleContent = (modules: Module[]): string => {
+  return `
+    <h2 style="color: #7c3aed; margin-top: 30px;">Course Content:</h2>
+    ${modules.map((module, moduleIndex) => `
+      <div style="margin: 30px 0;">
+        <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 8px;">
+          Module ${moduleIndex + 1}: ${module.name}
+        </h2>
+        ${module.chapters.map((chapter, chapterIndex) => `
+          <div style="background: #f3f4f6; margin: 15px 0; padding: 20px; border-left: 4px solid #2563eb; border-radius: 4px;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0;">
+              ${moduleIndex + 1}.${chapterIndex + 1} ${chapter.name}
+            </h3>
+            <p style="color: #4b5563; margin: 0 0 15px 0; line-height: 1.8;">
+              ${chapter.description}
+            </p>
+            
+            <div style="background: white; padding: 15px; border-radius: 4px; margin: 15px 0;">
+              <strong style="color: #2563eb; font-size: 16px;">📌 Key Points:</strong>
+              <ul style="margin: 10px 0; padding-left: 25px; color: #374151;">
+                ${chapter.keyPoints.map(point => `<li style="margin: 5px 0;">${point}</li>`).join('')}
+              </ul>
+            </div>
+            
+            <div style="background: #eff6ff; padding: 15px; border-radius: 4px; border-left: 3px solid #3b82f6;">
+              <strong style="color: #1e40af; font-size: 15px;">💡 Practical Applications:</strong>
+              <p style="color: #1e3a8a; margin: 8px 0 0 0; line-height: 1.7;">
+                ${chapter.applications}
+              </p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('')}
+  `;
+};
+
+const generateTopicContent = (topics: string[]): string => {
+  return `
+    <h2 style="color: #7c3aed; margin-top: 30px;">Topics Covered:</h2>
+    <ul style="list-style-type: none; padding-left: 0;">
+      ${topics.map(topic => `
+        <li style="background: #f3f4f6; margin: 10px 0; padding: 15px; border-left: 4px solid #2563eb; border-radius: 4px;">
+          <h3 style="color: #1f2937; margin: 0 0 10px 0;">${topic}</h3>
+          <p style="color: #4b5563; margin: 0;">
+            ${getTopicDescription(topic)}
+          </p>
+          <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <strong style="color: #2563eb;">Key Points:</strong>
+            <ul style="margin: 5px 0; padding-left: 20px;">
+              ${getKeyPoints(topic).map(point => `<li style="color: #374151;">${point}</li>`).join('')}
+            </ul>
+          </div>
+        </li>
+      `).join('')}
+    </ul>
+  `;
 };
 
 const getKeyPoints = (topic: string): string[] => {
@@ -147,49 +206,124 @@ export const downloadPdf = (content: NoteContent) => {
   doc.text(`Subject: ${content.subject}`, margin, yPosition);
   yPosition += 15;
   
-  // Topics heading
-  doc.setFontSize(16);
-  doc.setTextColor(124, 58, 237);
-  doc.text('Topics Covered:', margin, yPosition);
-  yPosition += 10;
-  
-  // Topics
-  doc.setFontSize(11);
-  doc.setTextColor(0, 0, 0);
-  content.topics.forEach((topic, index) => {
-    if (yPosition > 270) {
-      doc.addPage();
-      yPosition = 20;
-    }
+  // Generate content based on structure
+  if (content.modules) {
+    // AI-analyzed content with modules
+    content.modules.forEach((module, moduleIndex) => {
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      // Module heading
+      doc.setFontSize(16);
+      doc.setTextColor(37, 99, 235);
+      doc.text(`Module ${moduleIndex + 1}: ${module.name}`, margin, yPosition);
+      yPosition += 10;
+      
+      module.chapters.forEach((chapter, chapterIndex) => {
+        if (yPosition > 260) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        // Chapter heading
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(`${moduleIndex + 1}.${chapterIndex + 1} ${chapter.name}`, margin + 5, yPosition);
+        yPosition += 8;
+        
+        // Description
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        const splitDesc = doc.splitTextToSize(chapter.description, pageWidth - 2 * margin - 10);
+        doc.text(splitDesc, margin + 5, yPosition);
+        yPosition += splitDesc.length * 5 + 8;
+        
+        // Key Points
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.setFont(undefined, 'bold');
+        doc.text('Key Points:', margin + 5, yPosition);
+        yPosition += 6;
+        
+        doc.setFont(undefined, 'normal');
+        chapter.keyPoints.forEach(point => {
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          const splitPoint = doc.splitTextToSize(`• ${point}`, pageWidth - 2 * margin - 15);
+          doc.text(splitPoint, margin + 10, yPosition);
+          yPosition += splitPoint.length * 5 + 2;
+        });
+        
+        yPosition += 5;
+        
+        // Applications
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.setFont(undefined, 'bold');
+        doc.text('Practical Applications:', margin + 5, yPosition);
+        yPosition += 6;
+        
+        doc.setFont(undefined, 'normal');
+        const splitApp = doc.splitTextToSize(chapter.applications, pageWidth - 2 * margin - 10);
+        doc.text(splitApp, margin + 5, yPosition);
+        yPosition += splitApp.length * 5 + 12;
+      });
+      
+      yPosition += 5;
+    });
+  } else if (content.topics) {
+    // Simple topic-based content
+    doc.setFontSize(16);
+    doc.setTextColor(124, 58, 237);
+    doc.text('Topics Covered:', margin, yPosition);
+    yPosition += 10;
     
-    doc.setFont(undefined, 'bold');
-    doc.text(`${index + 1}. ${topic}`, margin, yPosition);
-    yPosition += 7;
-    
-    doc.setFont(undefined, 'normal');
-    const description = getTopicDescription(topic);
-    const splitDescription = doc.splitTextToSize(description, pageWidth - 2 * margin);
-    doc.text(splitDescription, margin + 5, yPosition);
-    yPosition += splitDescription.length * 5 + 5;
-    
-    const keyPoints = getKeyPoints(topic);
-    doc.setFont(undefined, 'bold');
-    doc.text('Key Points:', margin + 5, yPosition);
-    yPosition += 6;
-    
-    doc.setFont(undefined, 'normal');
-    keyPoints.forEach(point => {
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    content.topics.forEach((topic, index) => {
       if (yPosition > 270) {
         doc.addPage();
         yPosition = 20;
       }
-      const splitPoint = doc.splitTextToSize(`• ${point}`, pageWidth - 2 * margin - 10);
-      doc.text(splitPoint, margin + 10, yPosition);
-      yPosition += splitPoint.length * 5 + 2;
+      
+      doc.setFont(undefined, 'bold');
+      doc.text(`${index + 1}. ${topic}`, margin, yPosition);
+      yPosition += 7;
+      
+      doc.setFont(undefined, 'normal');
+      const description = getTopicDescription(topic);
+      const splitDescription = doc.splitTextToSize(description, pageWidth - 2 * margin);
+      doc.text(splitDescription, margin + 5, yPosition);
+      yPosition += splitDescription.length * 5 + 5;
+      
+      const keyPoints = getKeyPoints(topic);
+      doc.setFont(undefined, 'bold');
+      doc.text('Key Points:', margin + 5, yPosition);
+      yPosition += 6;
+      
+      doc.setFont(undefined, 'normal');
+      keyPoints.forEach(point => {
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        const splitPoint = doc.splitTextToSize(`• ${point}`, pageWidth - 2 * margin - 10);
+        doc.text(splitPoint, margin + 10, yPosition);
+        yPosition += splitPoint.length * 5 + 2;
+      });
+      
+      yPosition += 10;
     });
-    
-    yPosition += 10;
-  });
+  }
   
   // Footer
   if (yPosition > 250) {
