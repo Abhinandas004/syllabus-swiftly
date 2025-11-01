@@ -32,32 +32,51 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert educational content analyzer. Your task is to:
-1. Extract text from syllabus images using OCR
-2. Identify the subject/course name
-3. Extract all modules, chapters, and topics
-4. For each topic, provide:
-   - Brief description (2-3 sentences)
-   - 4-5 key points to remember
-   - Practical applications or examples
+            content: `You are an expert educational content analyzer specializing in creating comprehensive study materials. Your task is to:
+
+1. EXTRACT ALL CONTENT from the syllabus image using OCR - don't miss anything
+2. Identify the subject/course name and full course details
+3. Extract ALL modules, chapters, topics, and sub-topics in complete detail
+4. For EACH chapter/topic, provide:
+   - Complete, detailed description (4-6 sentences explaining the concept thoroughly)
+   - Definition if applicable
+   - 6-8 comprehensive key points covering all aspects
+   - Real-world practical applications with specific examples
+   - Important formulas, theories, or concepts to remember
+   - Common mistakes or misconceptions to avoid
+   - Study tips specific to that topic
+   - Connections to other topics when relevant
+
+5. Identify and mark important/critical topics that need special attention
 
 Return the data in this exact JSON structure:
 {
   "subject": "string",
+  "courseCode": "string (if available)",
   "modules": [
     {
       "name": "string",
+      "description": "string (brief module overview)",
       "chapters": [
         {
           "name": "string",
-          "description": "string",
-          "keyPoints": ["string"],
-          "applications": "string"
+          "description": "string (detailed 4-6 sentences)",
+          "definition": "string (if applicable)",
+          "keyPoints": ["string", "string", ...] (6-8 points),
+          "applications": "string (detailed with specific examples)",
+          "formulas": ["string"] (if applicable),
+          "importantConcepts": ["string"] (key theories/concepts),
+          "commonMistakes": ["string"] (what to avoid),
+          "studyTips": ["string"] (specific tips for this topic),
+          "relatedTopics": ["string"] (connections to other topics),
+          "isImportant": boolean (true if critical topic)
         }
       ]
     }
   ]
-}`,
+}
+
+Be thorough and comprehensive - extract EVERY detail from the syllabus without missing anything.`,
           },
           {
             role: 'user',
