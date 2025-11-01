@@ -321,14 +321,24 @@ export const downloadPdf = (content: NoteContent) => {
   const margin = 20;
   let yPosition = 20;
   
-  // Function to add watermark on each page
+  // Function to add subtle watermark on each page
   const addWatermark = () => {
-    doc.setFontSize(50);
-    doc.setTextColor(37, 99, 235, 0.05); // Very light blue with low opacity
+    doc.setFontSize(40);
+    doc.setTextColor(200, 200, 200); // Very light gray
     doc.text('SyllabusToNotes.com', pageWidth / 2, pageHeight / 2, {
       align: 'center',
       angle: 45,
     });
+  };
+  
+  const checkPageBreak = (requiredSpace: number) => {
+    if (yPosition + requiredSpace > pageHeight - 40) {
+      doc.addPage();
+      addWatermark();
+      yPosition = 20;
+      return true;
+    }
+    return false;
   };
   
   addWatermark();
@@ -353,11 +363,7 @@ export const downloadPdf = (content: NoteContent) => {
   if (content.modules) {
     // AI-analyzed content with modules
     content.modules.forEach((module, moduleIndex) => {
-      if (yPosition > 250) {
-        doc.addPage();
-        addWatermark();
-        yPosition = 20;
-      }
+      checkPageBreak(30);
       
       // Module heading with background
       doc.setFillColor(124, 58, 237);
@@ -369,11 +375,7 @@ export const downloadPdf = (content: NoteContent) => {
       yPosition += 20;
       
       module.chapters.forEach((chapter, chapterIndex) => {
-        if (yPosition > 260) {
-          doc.addPage();
-          addWatermark();
-          yPosition = 20;
-        }
+        checkPageBreak(50);
         
         // Chapter heading with highlight for important topics
         const bgColor = chapter.isImportant ? [254, 243, 199] : [243, 244, 246];
@@ -396,11 +398,7 @@ export const downloadPdf = (content: NoteContent) => {
         
         // Definition (if available)
         if (chapter.definition) {
-          if (yPosition > 250) {
-            doc.addPage();
-            addWatermark();
-            yPosition = 20;
-          }
+          checkPageBreak(40);
           doc.setFillColor(243, 232, 255);
           doc.roundedRect(margin + 5, yPosition, pageWidth - 2 * margin - 10, 0, 1, 1, 'F');
           doc.setFont(undefined, 'bold');
@@ -421,11 +419,7 @@ export const downloadPdf = (content: NoteContent) => {
         }
         
         // Description
-        if (yPosition > 250) {
-          doc.addPage();
-          addWatermark();
-          yPosition = 20;
-        }
+        checkPageBreak(35);
         doc.setFont(undefined, 'bold');
         doc.setFontSize(11);
         doc.setTextColor(75, 85, 99);
@@ -439,11 +433,7 @@ export const downloadPdf = (content: NoteContent) => {
         yPosition += splitDesc.length * 5 + 10;
         
         // Key Points
-        if (yPosition > 240) {
-          doc.addPage();
-          addWatermark();
-          yPosition = 20;
-        }
+        checkPageBreak(40);
         doc.setFont(undefined, 'bold');
         doc.setFontSize(11);
         doc.setTextColor(37, 99, 235);
@@ -454,11 +444,7 @@ export const downloadPdf = (content: NoteContent) => {
         doc.setFontSize(10);
         doc.setTextColor(55, 65, 81);
         chapter.keyPoints.forEach(point => {
-          if (yPosition > 270) {
-            doc.addPage();
-            addWatermark();
-            yPosition = 20;
-          }
+          checkPageBreak(15);
           const splitPoint = doc.splitTextToSize(`• ${point}`, pageWidth - 2 * margin - 15);
           doc.text(splitPoint, margin + 10, yPosition);
           yPosition += splitPoint.length * 5 + 3;
@@ -468,11 +454,7 @@ export const downloadPdf = (content: NoteContent) => {
         
         // Important Concepts (if available)
         if (chapter.importantConcepts && chapter.importantConcepts.length > 0) {
-          if (yPosition > 240) {
-            doc.addPage();
-            addWatermark();
-            yPosition = 20;
-          }
+          checkPageBreak(40);
           doc.setFont(undefined, 'bold');
           doc.setFontSize(11);
           doc.setTextColor(217, 119, 6);
@@ -483,11 +465,7 @@ export const downloadPdf = (content: NoteContent) => {
           doc.setFontSize(10);
           doc.setTextColor(146, 64, 14);
           chapter.importantConcepts.forEach(concept => {
-            if (yPosition > 270) {
-              doc.addPage();
-              addWatermark();
-              yPosition = 20;
-            }
+            checkPageBreak(15);
             const splitConcept = doc.splitTextToSize(`• ${concept}`, pageWidth - 2 * margin - 15);
             doc.text(splitConcept, margin + 10, yPosition);
             yPosition += splitConcept.length * 5 + 3;
@@ -497,11 +475,7 @@ export const downloadPdf = (content: NoteContent) => {
         
         // Formulas (if available)
         if (chapter.formulas && chapter.formulas.length > 0) {
-          if (yPosition > 240) {
-            doc.addPage();
-            addWatermark();
-            yPosition = 20;
-          }
+          checkPageBreak(40);
           doc.setFont(undefined, 'bold');
           doc.setFontSize(11);
           doc.setTextColor(3, 105, 161);
@@ -512,11 +486,7 @@ export const downloadPdf = (content: NoteContent) => {
           doc.setFontSize(10);
           doc.setTextColor(12, 74, 110);
           chapter.formulas.forEach(formula => {
-            if (yPosition > 270) {
-              doc.addPage();
-              addWatermark();
-              yPosition = 20;
-            }
+            checkPageBreak(15);
             doc.setFillColor(240, 249, 255);
             const formulaHeight = 8;
             doc.roundedRect(margin + 8, yPosition - 3, pageWidth - 2 * margin - 16, formulaHeight, 1, 1, 'F');
@@ -528,11 +498,7 @@ export const downloadPdf = (content: NoteContent) => {
         }
         
         // Applications
-        if (yPosition > 240) {
-          doc.addPage();
-          addWatermark();
-          yPosition = 20;
-        }
+        checkPageBreak(35);
         doc.setFont(undefined, 'bold');
         doc.setFontSize(11);
         doc.setTextColor(30, 64, 175);
@@ -548,11 +514,7 @@ export const downloadPdf = (content: NoteContent) => {
         
         // Study Tips (if available)
         if (chapter.studyTips && chapter.studyTips.length > 0) {
-          if (yPosition > 240) {
-            doc.addPage();
-            addWatermark();
-            yPosition = 20;
-          }
+          checkPageBreak(40);
           doc.setFont(undefined, 'bold');
           doc.setFontSize(11);
           doc.setTextColor(5, 150, 105);
@@ -563,11 +525,7 @@ export const downloadPdf = (content: NoteContent) => {
           doc.setFontSize(10);
           doc.setTextColor(6, 95, 70);
           chapter.studyTips.forEach(tip => {
-            if (yPosition > 270) {
-              doc.addPage();
-              addWatermark();
-              yPosition = 20;
-            }
+            checkPageBreak(15);
             const splitTip = doc.splitTextToSize(`• ${tip}`, pageWidth - 2 * margin - 15);
             doc.text(splitTip, margin + 10, yPosition);
             yPosition += splitTip.length * 5 + 3;
@@ -577,11 +535,7 @@ export const downloadPdf = (content: NoteContent) => {
         
         // Common Mistakes (if available)
         if (chapter.commonMistakes && chapter.commonMistakes.length > 0) {
-          if (yPosition > 240) {
-            doc.addPage();
-            addWatermark();
-            yPosition = 20;
-          }
+          checkPageBreak(40);
           doc.setFont(undefined, 'bold');
           doc.setFontSize(11);
           doc.setTextColor(220, 38, 38);
@@ -592,11 +546,7 @@ export const downloadPdf = (content: NoteContent) => {
           doc.setFontSize(10);
           doc.setTextColor(153, 27, 27);
           chapter.commonMistakes.forEach(mistake => {
-            if (yPosition > 270) {
-              doc.addPage();
-              addWatermark();
-              yPosition = 20;
-            }
+            checkPageBreak(15);
             const splitMistake = doc.splitTextToSize(`• ${mistake}`, pageWidth - 2 * margin - 15);
             doc.text(splitMistake, margin + 10, yPosition);
             yPosition += splitMistake.length * 5 + 3;
@@ -611,11 +561,7 @@ export const downloadPdf = (content: NoteContent) => {
     });
   } else if (content.topics) {
     // Simple topic-based content
-    if (yPosition > 250) {
-      doc.addPage();
-      addWatermark();
-      yPosition = 20;
-    }
+    checkPageBreak(30);
     doc.setFontSize(16);
     doc.setTextColor(124, 58, 237);
     doc.text('📚 Topics Covered:', margin, yPosition);
@@ -624,11 +570,7 @@ export const downloadPdf = (content: NoteContent) => {
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
     content.topics.forEach((topic, index) => {
-      if (yPosition > 260) {
-        doc.addPage();
-        addWatermark();
-        yPosition = 20;
-      }
+      checkPageBreak(40);
       
       doc.setFont(undefined, 'bold');
       doc.text(`${index + 1}. ${topic}`, margin, yPosition);
@@ -647,11 +589,7 @@ export const downloadPdf = (content: NoteContent) => {
       
       doc.setFont(undefined, 'normal');
       keyPoints.forEach(point => {
-        if (yPosition > 270) {
-          doc.addPage();
-          addWatermark();
-          yPosition = 20;
-        }
+        checkPageBreak(15);
         const splitPoint = doc.splitTextToSize(`• ${point}`, pageWidth - 2 * margin - 10);
         doc.text(splitPoint, margin + 10, yPosition);
         yPosition += splitPoint.length * 5 + 2;
@@ -662,11 +600,7 @@ export const downloadPdf = (content: NoteContent) => {
   }
   
   // Footer
-  if (yPosition > 235) {
-    doc.addPage();
-    addWatermark();
-    yPosition = 20;
-  }
+  checkPageBreak(40);
   
   doc.setFillColor(239, 246, 255);
   doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, 35, 3, 3, 'F');
