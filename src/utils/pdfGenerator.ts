@@ -36,14 +36,7 @@ export const generatePdfContent = (content: NoteContent): string => {
   const mainContent = modules ? generateModuleContent(modules) : generateTopicContent(topics || []);
   
   return `
-    <div style="font-family: Arial, sans-serif; line-height: 1.8; position: relative;">
-      <!-- Watermark -->
-      <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); 
-                  font-size: 80px; color: rgba(37, 99, 235, 0.05); font-weight: bold; z-index: -1; 
-                  white-space: nowrap; pointer-events: none;">
-        SyllabusToNotes.com
-      </div>
-      
+    <div style="font-family: Arial, sans-serif; line-height: 1.8;">
       <!-- Header -->
       <div style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); 
                   color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
@@ -321,27 +314,14 @@ export const downloadPdf = (content: NoteContent) => {
   const margin = 20;
   let yPosition = 20;
   
-  // Function to add subtle watermark on each page
-  const addWatermark = () => {
-    doc.setFontSize(40);
-    doc.setTextColor(200, 200, 200); // Very light gray
-    doc.text('SyllabusToNotes.com', pageWidth / 2, pageHeight / 2, {
-      align: 'center',
-      angle: 45,
-    });
-  };
-  
   const checkPageBreak = (requiredSpace: number) => {
     if (yPosition + requiredSpace > pageHeight - 40) {
       doc.addPage();
-      addWatermark();
       yPosition = 20;
       return true;
     }
     return false;
   };
-  
-  addWatermark();
   
   // Header with gradient effect (simulated)
   doc.setFillColor(37, 99, 235);
