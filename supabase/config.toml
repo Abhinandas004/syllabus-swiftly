@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.enhance-notes]
 verify_jwt = false
+
+[functions.search-youtube]
+verify_jwt = false
+
+[functions.fetch-image]
+verify_jwt = false
+
+[functions.ocr-extract]
+verify_jwt = false

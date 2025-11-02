@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, Download, CheckCircle, Star, Sparkles, Lock } from "lucide-react";
+import { Upload, FileText, Download, CheckCircle, Star, Sparkles, Lock, Eye } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import heroBanner from "@/assets/hero-banner.jpg";
@@ -14,6 +14,7 @@ const Home = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [generatedNote, setGeneratedNote] = useState<NoteContent | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
@@ -307,16 +308,38 @@ const Home = () => {
     }
   };
 
+  const handleViewEnhanced = () => {
+    if (generatedNote) {
+      navigate("/notes", { state: { noteData: generatedNote } });
+    }
+  };
+
   return (
     <div className="min-h-screen">
-      {generatedNote && (
-        <PdfPreviewModal
-          open={showPreview}
-          onClose={() => setShowPreview(false)}
-          pdfContent={generatePdfContent(generatedNote)}
-          title={generatedNote.title}
-          onDownload={handleDownloadPdf}
-        />
+      {generatedNote && showPreview && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h2 className="text-2xl font-bold">{generatedNote.title}</h2>
+              <div className="flex gap-2">
+                <Button onClick={handleViewEnhanced} variant="default">
+                  <Eye className="h-4 w-4 mr-2" />
+                  View with Resources
+                </Button>
+                <Button onClick={handleDownloadPdf} variant="secondary">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+                <Button onClick={() => setShowPreview(false)} variant="ghost">
+                  Close
+                </Button>
+              </div>
+            </div>
+            <div className="p-6 overflow-auto max-h-[calc(90vh-100px)]">
+              <div className="bg-white text-black p-8 rounded-lg" dangerouslySetInnerHTML={{ __html: generatePdfContent(generatedNote) }} />
+            </div>
+          </div>
+        </div>
       )}
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-secondary/5">
