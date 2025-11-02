@@ -144,21 +144,48 @@ const Home = () => {
       reader.onload = (e) => {
         const text = e.target?.result as string;
         const { subject, topics } = parseSyllabusContent(text, file.name);
-        
-        const noteContent: NoteContent = {
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          subject: subject,
-          topics: topics,
+
+        const enhance = async () => {
+          try {
+            const { data, error } = await supabase.functions.invoke('enhance-notes', {
+              body: { subject, topics, text }
+            });
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+            if (data?.success && data?.modules) {
+              const enriched: NoteContent = {
+                title: file.name.replace(/\.[^/.]+$/, ""),
+                subject: data.subject || subject,
+                modules: data.modules,
+              };
+              setGeneratedNote(enriched);
+            } else {
+              const basic: NoteContent = {
+                title: file.name.replace(/\.[^/.]+$/, ""),
+                subject,
+                topics,
+              };
+              setGeneratedNote(basic);
+            }
+          } catch (err) {
+            console.error('enhance-notes failed, using basic notes', err);
+            const basic: NoteContent = {
+              title: file.name.replace(/\.[^/.]+$/, ""),
+              subject,
+              topics,
+            };
+            setGeneratedNote(basic);
+          } finally {
+            setIsGenerating(false);
+            setShowPreview(true);
+            toast({
+              title: "Notes generated!",
+              description: "Your study notes are ready for preview and download.",
+            });
+          }
         };
-        
-        setGeneratedNote(noteContent);
-        setIsGenerating(false);
-        setShowPreview(true);
-        
-        toast({
-          title: "Notes generated!",
-          description: "Your study notes are ready for preview and download.",
-        });
+
+        void enhance();
       };
       
       reader.onerror = () => {
@@ -169,31 +196,45 @@ const Home = () => {
     } else {
       // For other file types (PDF, DOC, DOCX), generate smart fallback
       setTimeout(() => {
-        generateFallbackNotes();
+        void generateFallbackNotes();
       }, 2000);
     }
   };
   
-  const generateFallbackNotes = () => {
+  const generateFallbackNotes = async () => {
     if (!file) return;
-    
+
     const filename = file.name.replace(/\.[^/.]+$/, "");
     const { subject, topics } = parseSyllabusContent(filename, filename);
-    
-    const noteContent: NoteContent = {
-      title: filename,
-      subject: subject,
-      topics: topics,
-    };
-    
-    setGeneratedNote(noteContent);
-    setIsGenerating(false);
-    setShowPreview(true);
-    
-    toast({
-      title: "Notes generated!",
-      description: "Your study notes are ready for preview and download.",
-    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('enhance-notes', {
+        body: { subject, topics }
+      });
+      if (error) throw error;
+      if (data?.success && data?.modules) {
+        const noteContent: NoteContent = {
+          title: filename,
+          subject: data.subject || subject,
+          modules: data.modules,
+        };
+        setGeneratedNote(noteContent);
+      } else {
+        const noteContent: NoteContent = { title: filename, subject, topics };
+        setGeneratedNote(noteContent);
+      }
+    } catch (err) {
+      console.error('enhance-notes failed, using basic notes', err);
+      const noteContent: NoteContent = { title: filename, subject, topics };
+      setGeneratedNote(noteContent);
+    } finally {
+      setIsGenerating(false);
+      setShowPreview(true);
+      toast({
+        title: "Notes generated!",
+        description: "Your study notes are ready for preview and download.",
+      });
+    }
   };
   
   const analyzeImageWithAI = async () => {

@@ -308,297 +308,218 @@ const getKeyPoints = (topic: string): string[] => {
 };
 
 export const downloadPdf = (content: NoteContent) => {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  let yPosition = 20;
-  
-  const checkPageBreak = (requiredSpace: number) => {
-    if (yPosition + requiredSpace > pageHeight - 40) {
+
+  const MARGIN = 18;
+  const TITLE = 26;
+  const MODULE = 18;
+  const CHAPTER = 15;
+  const BODY = 12;
+  const META = 11;
+  const LINE = 6.2;
+
+  let y = MARGIN;
+
+  const addBreak = (needed: number) => {
+    if (y + needed > pageHeight - MARGIN) {
       doc.addPage();
-      yPosition = 20;
-      return true;
+      y = MARGIN;
     }
-    return false;
   };
-  
-  // Header with gradient effect (simulated)
+
+  // Header
   doc.setFillColor(37, 99, 235);
-  doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, 35, 3, 3, 'F');
-  
-  doc.setFontSize(24);
+  doc.roundedRect(MARGIN, y, pageWidth - 2 * MARGIN, 38, 3, 3, 'F');
+
+  doc.setFontSize(TITLE);
   doc.setTextColor(255, 255, 255);
-  doc.text(content.title, pageWidth / 2, yPosition + 15, { align: 'center' });
-  
-  doc.setFontSize(11);
-  doc.text(`Subject: ${content.subject}`, margin + 5, yPosition + 28);
+  doc.setFont(undefined, 'bold');
+  doc.text(content.title, pageWidth / 2, y + 16, { align: 'center' });
+
+  doc.setFontSize(META);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Subject: ${content.subject}`, MARGIN + 5, y + 30);
   if (content.courseCode) {
-    doc.text(`Course: ${content.courseCode}`, pageWidth - margin - 5, yPosition + 28, { align: 'right' });
+    doc.text(`Course: ${content.courseCode}`, pageWidth - MARGIN - 5, y + 30, { align: 'right' });
   }
-  
-  yPosition += 45;
-  
-  // Generate content based on structure
+  y += 46;
+
+  const drawModuleHeader = (label: string) => {
+    addBreak(22);
+    doc.setFillColor(124, 58, 237);
+    doc.roundedRect(MARGIN, y - 4, pageWidth - 2 * MARGIN, 16, 2, 2, 'F');
+    doc.setFontSize(MODULE);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(undefined, 'bold');
+    doc.text(label, MARGIN + 6, y + 6);
+    y += 20;
+  };
+
+  const drawChapterHeader = (label: string, important?: boolean) => {
+    addBreak(18);
+    const bg = important ? [254, 243, 199] : [243, 244, 246];
+    doc.setFillColor(bg[0], bg[1], bg[2]);
+    doc.roundedRect(MARGIN, y - 2, pageWidth - 2 * MARGIN, 12, 1, 1, 'F');
+    doc.setFontSize(CHAPTER);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(label, MARGIN + 6, y + 6);
+    if (important) {
+      doc.setFontSize(10);
+      doc.setTextColor(245, 158, 11);
+      doc.text('★ IMPORTANT', pageWidth - MARGIN - 6, y + 6, { align: 'right' });
+    }
+    y += 16;
+  };
+
+  const writeLabel = (label: string, color: [number, number, number]) => {
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.text(label, MARGIN + 5, y);
+    y += 7;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(BODY);
+  };
+
+  const writeParagraph = (text: string, color: [number, number, number] = [55, 65, 81]) => {
+    doc.setTextColor(color[0], color[1], color[2]);
+    const split = doc.splitTextToSize(text, pageWidth - 2 * MARGIN - 10);
+    addBreak(split.length * LINE + 6);
+    doc.text(split, MARGIN + 5, y);
+    y += split.length * LINE + 8;
+  };
+
+  const writeBullets = (items: string[], color: [number, number, number]) => {
+    doc.setTextColor(color[0], color[1], color[2]);
+    for (const item of items) {
+      const split = doc.splitTextToSize(`• ${item}`, pageWidth - 2 * MARGIN - 15);
+      addBreak(split.length * LINE + 4);
+      doc.text(split, MARGIN + 10, y);
+      y += split.length * LINE + 3;
+    }
+    y += 6;
+  };
+
   if (content.modules) {
-    // AI-analyzed content with modules
-    content.modules.forEach((module, moduleIndex) => {
-      checkPageBreak(30);
-      
-      // Module heading with background
-      doc.setFillColor(124, 58, 237);
-      doc.roundedRect(margin, yPosition - 5, pageWidth - 2 * margin, 15, 2, 2, 'F');
-      
-      doc.setFontSize(16);
-      doc.setTextColor(255, 255, 255);
-      doc.text(`Module ${moduleIndex + 1}: ${module.name}`, margin + 5, yPosition + 5);
-      yPosition += 20;
-      
-      module.chapters.forEach((chapter, chapterIndex) => {
-        checkPageBreak(50);
-        
-        // Chapter heading with highlight for important topics
-        const bgColor = chapter.isImportant ? [254, 243, 199] : [243, 244, 246];
-        doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-        doc.roundedRect(margin, yPosition - 2, pageWidth - 2 * margin, 12, 1, 1, 'F');
-        
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont(undefined, 'bold');
-        const chapterTitle = `${moduleIndex + 1}.${chapterIndex + 1} ${chapter.name}`;
-        doc.text(chapterTitle, margin + 5, yPosition + 6);
-        
-        if (chapter.isImportant) {
-          doc.setFontSize(10);
-          doc.setTextColor(245, 158, 11);
-          doc.text('★ IMPORTANT', pageWidth - margin - 5, yPosition + 6, { align: 'right' });
-        }
-        
-        yPosition += 15;
-        
-        // Definition (if available)
-        if (chapter.definition) {
-          checkPageBreak(40);
-          doc.setFillColor(243, 232, 255);
-          doc.roundedRect(margin + 5, yPosition, pageWidth - 2 * margin - 10, 0, 1, 1, 'F');
-          doc.setFont(undefined, 'bold');
-          doc.setFontSize(11);
-          doc.setTextColor(126, 34, 206);
-          doc.text('Definition:', margin + 8, yPosition + 5);
-          yPosition += 8;
-          
+    content.modules.forEach((m, mi) => {
+      drawModuleHeader(`Module ${mi + 1}: ${m.name}`);
+      m.chapters.forEach((c, ci) => {
+        drawChapterHeader(`${mi + 1}.${ci + 1} ${c.name}`, c.isImportant);
+
+        if (c.definition) {
+          writeLabel('Definition:', [126, 34, 206]);
           doc.setFont(undefined, 'italic');
-          doc.setFontSize(10);
-          doc.setTextColor(75, 85, 99);
-          const splitDef = doc.splitTextToSize(chapter.definition, pageWidth - 2 * margin - 20);
-          const defHeight = splitDef.length * 5 + 10;
-          doc.setFillColor(243, 232, 255);
-          doc.roundedRect(margin + 5, yPosition - 5, pageWidth - 2 * margin - 10, defHeight, 1, 1, 'F');
-          doc.text(splitDef, margin + 8, yPosition);
-          yPosition += splitDef.length * 5 + 12;
-        }
-        
-        // Description
-        checkPageBreak(35);
-        doc.setFont(undefined, 'bold');
-        doc.setFontSize(11);
-        doc.setTextColor(75, 85, 99);
-        doc.text('Overview:', margin + 5, yPosition);
-        yPosition += 6;
-        
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(10);
-        const splitDesc = doc.splitTextToSize(chapter.description, pageWidth - 2 * margin - 10);
-        doc.text(splitDesc, margin + 5, yPosition);
-        yPosition += splitDesc.length * 5 + 10;
-        
-        // Key Points
-        checkPageBreak(40);
-        doc.setFont(undefined, 'bold');
-        doc.setFontSize(11);
-        doc.setTextColor(37, 99, 235);
-        doc.text('📌 Key Points:', margin + 5, yPosition);
-        yPosition += 7;
-        
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(10);
-        doc.setTextColor(55, 65, 81);
-        chapter.keyPoints.forEach(point => {
-          checkPageBreak(15);
-          const splitPoint = doc.splitTextToSize(`• ${point}`, pageWidth - 2 * margin - 15);
-          doc.text(splitPoint, margin + 10, yPosition);
-          yPosition += splitPoint.length * 5 + 3;
-        });
-        
-        yPosition += 8;
-        
-        // Important Concepts (if available)
-        if (chapter.importantConcepts && chapter.importantConcepts.length > 0) {
-          checkPageBreak(40);
-          doc.setFont(undefined, 'bold');
-          doc.setFontSize(11);
-          doc.setTextColor(217, 119, 6);
-          doc.text('🎯 Important Concepts:', margin + 5, yPosition);
-          yPosition += 7;
-          
+          writeParagraph(c.definition, [75, 85, 99]);
           doc.setFont(undefined, 'normal');
-          doc.setFontSize(10);
-          doc.setTextColor(146, 64, 14);
-          chapter.importantConcepts.forEach(concept => {
-            checkPageBreak(15);
-            const splitConcept = doc.splitTextToSize(`• ${concept}`, pageWidth - 2 * margin - 15);
-            doc.text(splitConcept, margin + 10, yPosition);
-            yPosition += splitConcept.length * 5 + 3;
-          });
-          yPosition += 8;
         }
-        
-        // Formulas (if available)
-        if (chapter.formulas && chapter.formulas.length > 0) {
-          checkPageBreak(40);
-          doc.setFont(undefined, 'bold');
-          doc.setFontSize(11);
-          doc.setTextColor(3, 105, 161);
-          doc.text('🔢 Formulas:', margin + 5, yPosition);
-          yPosition += 7;
-          
+
+        writeLabel('Overview:', [75, 85, 99]);
+        writeParagraph(c.description, [75, 85, 99]);
+
+        writeLabel('📌 Key Points:', [37, 99, 235]);
+        writeBullets(c.keyPoints || [], [55, 65, 81]);
+
+        if (c.importantConcepts?.length) {
+          writeLabel('🎯 Important Concepts:', [217, 119, 6]);
+          writeBullets(c.importantConcepts, [146, 64, 14]);
+        }
+
+        if (c.formulas?.length) {
+          writeLabel('🔢 Formulas:', [3, 105, 161]);
           doc.setFont('courier', 'normal');
-          doc.setFontSize(10);
           doc.setTextColor(12, 74, 110);
-          chapter.formulas.forEach(formula => {
-            checkPageBreak(15);
+          for (const f of c.formulas) {
+            const split = doc.splitTextToSize(f, pageWidth - 2 * MARGIN - 16);
+            addBreak(split.length * LINE + 6);
             doc.setFillColor(240, 249, 255);
-            const formulaHeight = 8;
-            doc.roundedRect(margin + 8, yPosition - 3, pageWidth - 2 * margin - 16, formulaHeight, 1, 1, 'F');
-            doc.text(formula, margin + 10, yPosition + 2);
-            yPosition += formulaHeight + 3;
-          });
+            doc.roundedRect(MARGIN + 8, y - 3, pageWidth - 2 * MARGIN - 16, split.length * LINE + 4, 1, 1, 'F');
+            doc.text(split, MARGIN + 10, y);
+            y += split.length * LINE + 6;
+          }
           doc.setFont(undefined, 'normal');
-          yPosition += 8;
         }
-        
-        // Applications
-        checkPageBreak(35);
-        doc.setFont(undefined, 'bold');
-        doc.setFontSize(11);
-        doc.setTextColor(30, 64, 175);
-        doc.text('💡 Practical Applications:', margin + 5, yPosition);
-        yPosition += 7;
-        
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(10);
-        doc.setTextColor(30, 58, 138);
-        const splitApp = doc.splitTextToSize(chapter.applications, pageWidth - 2 * margin - 10);
-        doc.text(splitApp, margin + 5, yPosition);
-        yPosition += splitApp.length * 5 + 10;
-        
-        // Study Tips (if available)
-        if (chapter.studyTips && chapter.studyTips.length > 0) {
-          checkPageBreak(40);
-          doc.setFont(undefined, 'bold');
-          doc.setFontSize(11);
-          doc.setTextColor(5, 150, 105);
-          doc.text('✅ Study Tips:', margin + 5, yPosition);
-          yPosition += 7;
-          
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(10);
-          doc.setTextColor(6, 95, 70);
-          chapter.studyTips.forEach(tip => {
-            checkPageBreak(15);
-            const splitTip = doc.splitTextToSize(`• ${tip}`, pageWidth - 2 * margin - 15);
-            doc.text(splitTip, margin + 10, yPosition);
-            yPosition += splitTip.length * 5 + 3;
-          });
-          yPosition += 8;
+
+        writeLabel('💡 Practical Applications:', [30, 64, 175]);
+        writeParagraph(c.applications, [30, 58, 138]);
+
+        if (c.studyTips?.length) {
+          writeLabel('✅ Study Tips:', [5, 150, 105]);
+          writeBullets(c.studyTips, [6, 95, 70]);
         }
-        
-        // Common Mistakes (if available)
-        if (chapter.commonMistakes && chapter.commonMistakes.length > 0) {
-          checkPageBreak(40);
-          doc.setFont(undefined, 'bold');
-          doc.setFontSize(11);
-          doc.setTextColor(220, 38, 38);
-          doc.text('⚠️ Common Mistakes:', margin + 5, yPosition);
-          yPosition += 7;
-          
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(10);
-          doc.setTextColor(153, 27, 27);
-          chapter.commonMistakes.forEach(mistake => {
-            checkPageBreak(15);
-            const splitMistake = doc.splitTextToSize(`• ${mistake}`, pageWidth - 2 * margin - 15);
-            doc.text(splitMistake, margin + 10, yPosition);
-            yPosition += splitMistake.length * 5 + 3;
-          });
-          yPosition += 8;
+
+        if (c.commonMistakes?.length) {
+          writeLabel('⚠️ Common Mistakes:', [220, 38, 38]);
+          writeBullets(c.commonMistakes, [153, 27, 27]);
         }
-        
-        yPosition += 12;
+
+        y += 6;
       });
-      
-      yPosition += 8;
+      y += 6;
     });
   } else if (content.topics) {
-    // Simple topic-based content
-    checkPageBreak(30);
-    doc.setFontSize(16);
+    addBreak(20);
+    doc.setFontSize(MODULE);
     doc.setTextColor(124, 58, 237);
-    doc.text('📚 Topics Covered:', margin, yPosition);
-    yPosition += 12;
-    
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    content.topics.forEach((topic, index) => {
-      checkPageBreak(40);
-      
+    doc.setFont(undefined, 'bold');
+    doc.text('📚 Topics Covered:', MARGIN, y);
+    y += 12;
+
+    doc.setFontSize(BODY);
+    doc.setFont(undefined, 'normal');
+    for (let i = 0; i < content.topics.length; i++) {
+      addBreak(20);
       doc.setFont(undefined, 'bold');
-      doc.text(`${index + 1}. ${topic}`, margin, yPosition);
-      yPosition += 7;
-      
+      doc.text(`${i + 1}. ${content.topics[i]}`, MARGIN, y);
+      y += 7;
       doc.setFont(undefined, 'normal');
-      const description = getTopicDescription(topic);
-      const splitDescription = doc.splitTextToSize(description, pageWidth - 2 * margin);
-      doc.text(splitDescription, margin + 5, yPosition);
-      yPosition += splitDescription.length * 5 + 5;
-      
-      const keyPoints = getKeyPoints(topic);
+      const desc = getTopicDescription(content.topics[i]);
+      const split = doc.splitTextToSize(desc, pageWidth - 2 * MARGIN);
+      addBreak(split.length * LINE + 8);
+      doc.text(split, MARGIN + 5, y);
+      y += split.length * LINE + 6;
+
+      const kps = getKeyPoints(content.topics[i]);
       doc.setFont(undefined, 'bold');
-      doc.text('Key Points:', margin + 5, yPosition);
-      yPosition += 6;
-      
+      doc.text('Key Points:', MARGIN + 5, y);
+      y += 7;
       doc.setFont(undefined, 'normal');
-      keyPoints.forEach(point => {
-        checkPageBreak(15);
-        const splitPoint = doc.splitTextToSize(`• ${point}`, pageWidth - 2 * margin - 10);
-        doc.text(splitPoint, margin + 10, yPosition);
-        yPosition += splitPoint.length * 5 + 2;
-      });
-      
-      yPosition += 10;
-    });
+      for (const kp of kps) {
+        const s = doc.splitTextToSize(`• ${kp}`, pageWidth - 2 * MARGIN - 10);
+        addBreak(s.length * LINE + 4);
+        doc.text(s, MARGIN + 10, y);
+        y += s.length * LINE + 3;
+      }
+      y += 8;
+    }
   }
-  
-  // Footer
-  checkPageBreak(40);
-  
+
+  // Footer note
+  addBreak(28);
   doc.setFillColor(239, 246, 255);
-  doc.roundedRect(margin, yPosition, pageWidth - 2 * margin, 35, 3, 3, 'F');
+  doc.roundedRect(MARGIN, y, pageWidth - 2 * MARGIN, 30, 3, 3, 'F');
   doc.setDrawColor(37, 99, 235);
   doc.setLineWidth(0.5);
-  doc.line(margin, yPosition, pageWidth - margin, yPosition);
-  
+  doc.line(MARGIN, y, pageWidth - MARGIN, y);
+  doc.setFont(undefined, 'bold');
   doc.setFontSize(12);
   doc.setTextColor(37, 99, 235);
-  doc.setFont(undefined, 'bold');
-  doc.text('SyllabusToNotes.com', pageWidth / 2, yPosition + 15, { align: 'center' });
-  
-  doc.setFontSize(9);
+  doc.text('SyllabusToNotes.com', pageWidth / 2, y + 14, { align: 'center' });
   doc.setFont(undefined, 'normal');
+  doc.setFontSize(10);
   doc.setTextColor(107, 114, 128);
-  doc.text('AI-Powered Comprehensive Study Notes', pageWidth / 2, yPosition + 23, { align: 'center' });
-  doc.text('Visit us at www.syllabustonotes.com', pageWidth / 2, yPosition + 29, { align: 'center' });
-  
-  // Save
+  doc.text('AI-Powered Comprehensive Study Notes', pageWidth / 2, y + 22, { align: 'center' });
+
+  // Page numbers
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  }
+
   doc.save(`${content.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
