@@ -148,8 +148,24 @@ const Home = () => {
 
         const enhance = async () => {
           try {
+            // Step 1: Summarize with Hugging Face
+            let processedText = text;
+            if (text.length > 500) {
+              const { data: summaryData, error: summaryError } = await supabase.functions.invoke('summarize-text', {
+                body: { text }
+              });
+              if (!summaryError && summaryData?.success) {
+                processedText = summaryData.summary;
+                toast({
+                  title: "Text summarized!",
+                  description: "Hugging Face AI has condensed your content.",
+                });
+              }
+            }
+
+            // Step 2: Enhance with Gemini
             const { data, error } = await supabase.functions.invoke('enhance-notes', {
-              body: { subject, topics, text }
+              body: { subject, topics, text: processedText }
             });
             if (error) throw error;
             if (data?.error) throw new Error(data.error);
