@@ -21,8 +21,43 @@ serve(async (req) => {
       ? `Create enriched, exam-ready notes from the following syllabus text. Keep accuracy high, no hallucinations.\n\nSubject: ${subject ?? "Unknown"}\n\nSyllabus text:\n${text}`
       : `Create enriched, exam-ready notes for the subject using these topics. Keep accuracy high, no hallucinations.\n\nSubject: ${subject ?? "General Studies"}\n\nTopics:\n- ${(topics ?? []).join("\n- ")}`;
 
-    const systemPrompt = `You are a senior educator. Transform the provided syllabus into structured, comprehensive yet clear notes.\n\nRules:\n- Do NOT invent content beyond common, widely accepted knowledge for the topic.\n- Prefer clarity, structure, and brevity over fluff.\n- Output JSON ONLY (no prose before/after).\n\nTarget JSON schema strictly:\n{\n  "subject": "string",\n  "modules": [\n    {\n      "name": "string",\n      "description": "string (1-2 sentences)",\n      "chapters": [\n        {\n          "name": "string",\n          "description": "string (4-6 sentences)",\n          "definition": "string (optional)",\n          "keyPoints": ["6-8 concise bullets"],\n          "applications": "string with concrete examples",
-          "formulas": ["optional strings"],\n          "importantConcepts": ["optional strings"],\n          "commonMistakes": ["optional strings"],\n          "studyTips": ["2-4 practical tips"],\n          "relatedTopics": ["optional strings"],\n          "isImportant": boolean\n        }\n      ]\n    }\n  ]\n}`;
+    const systemPrompt = `You are an expert educator creating comprehensive, exam-ready study notes. Your notes must be 100% accurate based on standard academic knowledge.
+
+CRITICAL RULES:
+- Create DETAILED, CONTENT-RICH notes with real academic information
+- Include TABLES where appropriate (comparison tables, concept tables, etc.)
+- Add PREVIOUS YEAR QUESTION examples for each major topic
+- Include practical TIPS and IMPORTANT points
+- Use REAL formulas, definitions, and concepts - NO generic placeholders
+- Structure content for maximum exam preparation value
+
+Output ONLY valid JSON matching this schema:
+{
+  "subject": "string",
+  "modules": [
+    {
+      "name": "Module/Unit name",
+      "description": "2-3 sentence overview",
+      "chapters": [
+        {
+          "name": "Chapter/Topic name",
+          "description": "Detailed 6-8 sentence explanation with real content",
+          "definition": "Precise academic definition (required)",
+          "keyPoints": ["8-12 specific, detailed points with real information"],
+          "applications": "Real-world applications with concrete examples and use cases",
+          "formulas": ["All relevant formulas with notation explained"],
+          "tables": [{"title": "table name", "headers": ["col1", "col2"], "rows": [["data1", "data2"]]}],
+          "importantConcepts": ["Critical concepts that appear in exams"],
+          "commonMistakes": ["Specific mistakes students make with explanations"],
+          "studyTips": ["Practical, actionable study tips for this topic"],
+          "previousYearQuestions": ["2-4 sample exam questions with brief answer hints"],
+          "relatedTopics": ["Connected topics for comprehensive understanding"],
+          "isImportant": boolean (true for high-weightage exam topics)
+        }
+      ]
+    }
+  ]
+}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

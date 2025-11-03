@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
-import { WikipediaInfo } from "@/components/WikipediaInfo";
+
 import { YouTubeVideos } from "@/components/YouTubeVideos";
 import { downloadPdf, type NoteContent } from "@/utils/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
@@ -87,8 +87,7 @@ const EnhancedNotes = () => {
                       )}
 
                       {/* Additional Resources */}
-                      <div className="grid md:grid-cols-2 gap-4 mt-6">
-                        <WikipediaInfo topic={chapter.name} />
+                      <div className="mt-6">
                         <YouTubeVideos topic={chapter.name} />
                       </div>
                     </div>
@@ -103,8 +102,7 @@ const EnhancedNotes = () => {
               <div key={idx} className="bg-card rounded-lg p-6 shadow-lg">
                 <h3 className="text-xl font-semibold mb-4">{topic}</h3>
                 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <WikipediaInfo topic={topic} />
+                <div>
                   <YouTubeVideos topic={topic} />
                 </div>
               </div>

@@ -14,6 +14,3 @@ verify_jwt = false
 
 [functions.ocr-extract]
 verify_jwt = false
-
-[functions.summarize-text]
-verify_jwt = false

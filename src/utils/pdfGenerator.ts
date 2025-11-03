@@ -7,9 +7,11 @@ export interface Chapter {
   keyPoints: string[];
   applications: string;
   formulas?: string[];
+  tables?: Array<{ title: string; headers: string[]; rows: string[][] }>;
   importantConcepts?: string[];
   commonMistakes?: string[];
   studyTips?: string[];
+  previousYearQuestions?: string[];
   relatedTopics?: string[];
   isImportant?: boolean;
 }
@@ -41,7 +43,7 @@ export const generatePdfContent = (content: NoteContent): string => {
       <div style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); 
                   color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
         <h1 style="margin: 0 0 10px 0; font-size: 32px; border-bottom: 3px solid white; padding-bottom: 15px;">
-          ${title}
+          ${subject}
         </h1>
         <div style="display: flex; gap: 20px; margin-top: 15px; font-size: 14px;">
           <p style="margin: 0;"><strong>Subject:</strong> ${subject}</p>
@@ -196,6 +198,30 @@ const generateModuleContent = (modules: Module[]): string => {
               </div>
             ` : ''}
             
+            ${chapter.tables && chapter.tables.length > 0 ? `
+              ${chapter.tables.map(table => `
+                <div style="background: white; padding: 18px; border-radius: 6px; margin: 15px 0; border: 2px solid #e5e7eb;">
+                  <strong style="color: #374151; font-size: 16px; display: block; margin-bottom: 12px;">
+                    📊 ${table.title}
+                  </strong>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="background: #f3f4f6;">
+                        ${table.headers.map(h => `<th style="padding: 10px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">${h}</th>`).join('')}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${table.rows.map(row => `
+                        <tr>
+                          ${row.map(cell => `<td style="padding: 10px; border: 1px solid #d1d5db;">${cell}</td>`).join('')}
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              `).join('')}
+            ` : ''}
+            
             <div style="background: #eff6ff; padding: 18px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #3b82f6;">
               <strong style="color: #1e40af; font-size: 16px; display: block; margin-bottom: 10px;">
                 💡 Practical Applications:
@@ -228,6 +254,19 @@ const generateModuleContent = (modules: Module[]): string => {
                     <li style="margin: 8px 0;">${mistake}</li>
                   `).join('')}
                 </ul>
+              </div>
+            ` : ''}
+            
+            ${chapter.previousYearQuestions && chapter.previousYearQuestions.length > 0 ? `
+              <div style="background: #fef3c7; padding: 18px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #f59e0b;">
+                <strong style="color: #d97706; font-size: 16px; display: block; margin-bottom: 12px;">
+                  📝 Previous Year Questions:
+                </strong>
+                <ol style="margin: 0; padding-left: 25px; color: #92400e; line-height: 2;">
+                  ${chapter.previousYearQuestions.map(q => `
+                    <li style="margin: 8px 0;">${q}</li>
+                  `).join('')}
+                </ol>
               </div>
             ` : ''}
             
@@ -336,7 +375,7 @@ export const downloadPdf = (content: NoteContent) => {
   doc.setFontSize(TITLE);
   doc.setTextColor(255, 255, 255);
   doc.setFont(undefined, 'bold');
-  doc.text(content.title, pageWidth / 2, y + 16, { align: 'center' });
+  doc.text(content.subject, pageWidth / 2, y + 16, { align: 'center' });
 
   doc.setFontSize(META);
   doc.setFont(undefined, 'normal');
