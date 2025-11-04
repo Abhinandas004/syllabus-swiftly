@@ -244,19 +244,6 @@ const generateModuleContent = (modules: Module[]): string => {
               </div>
             ` : ''}
             
-            ${chapter.commonMistakes && chapter.commonMistakes.length > 0 ? `
-              <div style="background: #fef2f2; padding: 18px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #ef4444;">
-                <strong style="color: #dc2626; font-size: 16px; display: block; margin-bottom: 12px;">
-                  ⚠️ Common Mistakes to Avoid:
-                </strong>
-                <ul style="margin: 0; padding-left: 25px; color: #991b1b; line-height: 2;">
-                  ${chapter.commonMistakes.map(mistake => `
-                    <li style="margin: 8px 0;">${mistake}</li>
-                  `).join('')}
-                </ul>
-              </div>
-            ` : ''}
-            
             ${chapter.previousYearQuestions && chapter.previousYearQuestions.length > 0 ? `
               <div style="background: #fef3c7; padding: 18px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #f59e0b;">
                 <strong style="color: #d97706; font-size: 16px; display: block; margin-bottom: 12px;">
@@ -346,6 +333,26 @@ const getKeyPoints = (topic: string): string[] => {
   ];
 };
 
+// Sanitize text to avoid PDF encoding issues and stray symbols
+const sanitizeText = (s: string): string => {
+  if (!s) return '';
+  try {
+    let t = s
+      .replace(/[“”«»„‟]/g, '"')
+      .replace(/[‘’‚‛]/g, "'")
+      .replace(/[•·∙◦]/g, '-')
+      .replace(/[–—―]/g, '-')
+      .replace(/&/g, '') // remove stray ampersands often causing artifacts
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Remove non-printable / unsupported glyphs
+    t = t.normalize('NFKD').replace([^\x09\x0A\x0D\x20-\x7E]/g, '');
+    return t;
+  } catch {
+    return s;
+  }
+};
+
 export const downloadPdf = (content: NoteContent) => {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -375,13 +382,13 @@ export const downloadPdf = (content: NoteContent) => {
   doc.setFontSize(TITLE);
   doc.setTextColor(255, 255, 255);
   doc.setFont(undefined, 'bold');
-  doc.text(content.subject, pageWidth / 2, y + 16, { align: 'center' });
+  doc.text(sanitizeText(content.subject), pageWidth / 2, y + 16, { align: 'center' });
 
   doc.setFontSize(META);
   doc.setFont(undefined, 'normal');
-  doc.text(`Subject: ${content.subject}`, MARGIN + 5, y + 30);
+  doc.text(`Subject: ${sanitizeText(content.subject)}`, MARGIN + 5, y + 30);
   if (content.courseCode) {
-    doc.text(`Course: ${content.courseCode}`, pageWidth - MARGIN - 5, y + 30, { align: 'right' });
+    doc.text(`Course: ${sanitizeText(content.courseCode)}`, pageWidth - MARGIN - 5, y + 30, { align: 'right' });
   }
   y += 46;
 
@@ -392,7 +399,7 @@ export const downloadPdf = (content: NoteContent) => {
     doc.setFontSize(MODULE);
     doc.setTextColor(255, 255, 255);
     doc.setFont(undefined, 'bold');
-    doc.text(label, MARGIN + 6, y + 6);
+    doc.text(sanitizeText(label), MARGIN + 6, y + 6);
     y += 20;
   };
 
@@ -404,7 +411,7 @@ export const downloadPdf = (content: NoteContent) => {
     doc.setFontSize(CHAPTER);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text(label, MARGIN + 6, y + 6);
+    doc.text(sanitizeText(label), MARGIN + 6, y + 6);
     if (important) {
       doc.setFontSize(10);
       doc.setTextColor(245, 158, 11);
@@ -417,7 +424,7 @@ export const downloadPdf = (content: NoteContent) => {
     doc.setFont(undefined, 'bold');
     doc.setFontSize(13);
     doc.setTextColor(color[0], color[1], color[2]);
-    doc.text(label, MARGIN + 5, y);
+    doc.text(sanitizeText(label), MARGIN + 5, y);
     y += 7;
     doc.setFont(undefined, 'normal');
     doc.setFontSize(BODY);
@@ -425,7 +432,8 @@ export const downloadPdf = (content: NoteContent) => {
 
   const writeParagraph = (text: string, color: [number, number, number] = [55, 65, 81]) => {
     doc.setTextColor(color[0], color[1], color[2]);
-    const split = doc.splitTextToSize(text, pageWidth - 2 * MARGIN - 10);
+    const clean = sanitizeText(text);
+    const split = doc.splitTextToSize(clean, pageWidth - 2 * MARGIN - 10);
     addBreak(split.length * LINE + 6);
     doc.text(split, MARGIN + 5, y);
     y += split.length * LINE + 8;
@@ -434,7 +442,8 @@ export const downloadPdf = (content: NoteContent) => {
   const writeBullets = (items: string[], color: [number, number, number]) => {
     doc.setTextColor(color[0], color[1], color[2]);
     for (const item of items) {
-      const split = doc.splitTextToSize(`• ${item}`, pageWidth - 2 * MARGIN - 15);
+      const clean = sanitizeText(item);
+      const split = doc.splitTextToSize(`- ${clean}`, pageWidth - 2 * MARGIN - 15);
       addBreak(split.length * LINE + 4);
       doc.text(split, MARGIN + 10, y);
       y += split.length * LINE + 3;
@@ -489,10 +498,7 @@ export const downloadPdf = (content: NoteContent) => {
           writeBullets(c.studyTips, [6, 95, 70]);
         }
 
-        if (c.commonMistakes?.length) {
-          writeLabel('⚠️ Common Mistakes:', [220, 38, 38]);
-          writeBullets(c.commonMistakes, [153, 27, 27]);
-        }
+        // Common Mistakes section intentionally removed per user request
 
         y += 6;
       });
@@ -526,7 +532,7 @@ export const downloadPdf = (content: NoteContent) => {
       y += 7;
       doc.setFont(undefined, 'normal');
       for (const kp of kps) {
-        const s = doc.splitTextToSize(`• ${kp}`, pageWidth - 2 * MARGIN - 10);
+        const s = doc.splitTextToSize(`- ${sanitizeText(kp)}`, pageWidth - 2 * MARGIN - 10);
         addBreak(s.length * LINE + 4);
         doc.text(s, MARGIN + 10, y);
         y += s.length * LINE + 3;
@@ -560,5 +566,6 @@ export const downloadPdf = (content: NoteContent) => {
     doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
   }
 
-  doc.save(`${content.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+  const safeSubject = sanitizeText(content.subject).replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+  doc.save(`${safeSubject}_syllabus to notes.pdf`);
 };
