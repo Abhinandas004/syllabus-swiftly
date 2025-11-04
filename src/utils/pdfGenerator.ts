@@ -338,15 +338,15 @@ const sanitizeText = (s: string): string => {
   if (!s) return '';
   try {
     let t = s
-      .replace(/[“”«»„‟]/g, '"')
-      .replace(/[‘’‚‛]/g, "'")
+      .replace(/[""«»„‟]/g, '"')
+      .replace(/[''‚‛]/g, "'")
       .replace(/[•·∙◦]/g, '-')
       .replace(/[–—―]/g, '-')
-      .replace(/&/g, '') // remove stray ampersands often causing artifacts
+      .replace(/&/g, '')
       .replace(/\s+/g, ' ')
       .trim();
     // Remove non-printable / unsupported glyphs
-    t = t.normalize('NFKD').replace([^\x09\x0A\x0D\x20-\x7E]/g, '');
+    t = t.normalize('NFKD').replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
     return t;
   } catch {
     return s;
@@ -358,13 +358,13 @@ export const downloadPdf = (content: NoteContent) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  const MARGIN = 18;
-  const TITLE = 26;
-  const MODULE = 18;
-  const CHAPTER = 15;
-  const BODY = 12;
-  const META = 11;
-  const LINE = 6.2;
+  const MARGIN = 20;
+  const TITLE = 24;
+  const MODULE = 16;
+  const CHAPTER = 14;
+  const BODY = 11;
+  const META = 10;
+  const LINE = 6;
 
   let y = MARGIN;
 
@@ -375,49 +375,149 @@ export const downloadPdf = (content: NoteContent) => {
     }
   };
 
-  // Header
+  // COVER PAGE
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  
+  // Top border decoration
   doc.setFillColor(37, 99, 235);
-  doc.roundedRect(MARGIN, y, pageWidth - 2 * MARGIN, 38, 3, 3, 'F');
-
-  doc.setFontSize(TITLE);
-  doc.setTextColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, 3, 'F');
+  
+  y = 60;
+  
+  // Course name centered
+  doc.setFontSize(22);
+  doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'bold');
-  doc.text(sanitizeText(content.subject), pageWidth / 2, y + 16, { align: 'center' });
-
-  doc.setFontSize(META);
-  doc.setFont(undefined, 'normal');
-  doc.text(`Subject: ${sanitizeText(content.subject)}`, MARGIN + 5, y + 30);
+  doc.text(sanitizeText(content.subject.toUpperCase()), pageWidth / 2, y, { align: 'center' });
+  
+  y += 20;
+  
+  // Subtitle if course code exists
   if (content.courseCode) {
-    doc.text(`Course: ${sanitizeText(content.courseCode)}`, pageWidth - MARGIN - 5, y + 30, { align: 'right' });
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'normal');
+    doc.text(`(${sanitizeText(content.courseCode)})`, pageWidth / 2, y, { align: 'center' });
+    y += 15;
   }
-  y += 46;
+  
+  // Syllabus to Notes text
+  y += 10;
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(37, 99, 235);
+  doc.text('SYLLABUS TO NOTES', pageWidth / 2, y, { align: 'center' });
+  
+  // Footer on cover page
+  y = pageHeight - 50;
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(undefined, 'bold');
+  doc.text('SyllabusToNotes.com', pageWidth / 2, y, { align: 'center' });
+  
+  y += 10;
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('AI-Powered Comprehensive Study Notes', pageWidth / 2, y, { align: 'center' });
+  
+  y += 8;
+  doc.text('www.syllabustonotes.com', pageWidth / 2, y, { align: 'center' });
+  
+  // Bottom border decoration
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, pageHeight - 3, pageWidth, 3, 'F');
+  
+  // TABLE OF CONTENTS PAGE
+  if (content.modules && content.modules.length > 0) {
+    doc.addPage();
+    y = MARGIN + 10;
+    
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'bold');
+    doc.text('CONTENTS', pageWidth / 2, y, { align: 'center' });
+    
+    y += 20;
+    
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    
+    content.modules.forEach((module, idx) => {
+      if (y > pageHeight - 30) {
+        doc.addPage();
+        y = MARGIN;
+      }
+      
+      doc.setFont(undefined, 'bold');
+      doc.text(`${idx + 1}. ${sanitizeText(module.name)}`, MARGIN + 5, y);
+      y += 8;
+      
+      module.chapters.forEach((chapter, chIdx) => {
+        if (y > pageHeight - 25) {
+          doc.addPage();
+          y = MARGIN;
+        }
+        doc.setFont(undefined, 'normal');
+        const chapterText = `   ${idx + 1}.${chIdx + 1} ${sanitizeText(chapter.name)}`;
+        doc.text(chapterText, MARGIN + 10, y);
+        y += 6;
+      });
+      
+      y += 4;
+    });
+  }
+  
+  // Start content on new page
+  doc.addPage();
+  y = MARGIN;
 
-  const drawModuleHeader = (label: string) => {
-    addBreak(22);
-    doc.setFillColor(124, 58, 237);
-    doc.roundedRect(MARGIN, y - 4, pageWidth - 2 * MARGIN, 16, 2, 2, 'F');
+  const drawModuleHeader = (label: string, description?: string) => {
+    // Start module on new page
+    doc.addPage();
+    y = MARGIN;
+    
+    // Module header with dark background
+    doc.setFillColor(0, 0, 0);
+    doc.rect(MARGIN, y, pageWidth - 2 * MARGIN, 20, 'F');
+    
     doc.setFontSize(MODULE);
     doc.setTextColor(255, 255, 255);
     doc.setFont(undefined, 'bold');
-    doc.text(sanitizeText(label), MARGIN + 6, y + 6);
-    y += 20;
+    doc.text(sanitizeText(label), MARGIN + 5, y + 12);
+    y += 28;
+    
+    // Module description if available
+    if (description) {
+      doc.setFontSize(BODY);
+      doc.setTextColor(60, 60, 60);
+      doc.setFont(undefined, 'normal');
+      const descLines = doc.splitTextToSize(sanitizeText(description), pageWidth - 2 * MARGIN - 10);
+      doc.text(descLines, MARGIN + 5, y);
+      y += descLines.length * LINE + 10;
+    }
   };
 
   const drawChapterHeader = (label: string, important?: boolean) => {
-    addBreak(18);
-    const bg = important ? [254, 243, 199] : [243, 244, 246];
-    doc.setFillColor(bg[0], bg[1], bg[2]);
-    doc.roundedRect(MARGIN, y - 2, pageWidth - 2 * MARGIN, 12, 1, 1, 'F');
+    addBreak(15);
+    
     doc.setFontSize(CHAPTER);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text(sanitizeText(label), MARGIN + 6, y + 6);
+    doc.text(sanitizeText(label), MARGIN, y);
+    
     if (important) {
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.setTextColor(245, 158, 11);
-      doc.text('★ IMPORTANT', pageWidth - MARGIN - 6, y + 6, { align: 'right' });
+      doc.text('★ IMPORTANT', pageWidth - MARGIN, y, { align: 'right' });
     }
-    y += 16;
+    
+    // Underline
+    y += 2;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(MARGIN, y, pageWidth - MARGIN, y);
+    y += 10;
   };
 
   const writeLabel = (label: string, color: [number, number, number]) => {
@@ -453,9 +553,10 @@ export const downloadPdf = (content: NoteContent) => {
 
   if (content.modules) {
     content.modules.forEach((m, mi) => {
-      drawModuleHeader(`Module ${mi + 1}: ${m.name}`);
+      drawModuleHeader(`Module ${mi + 1}: ${m.name}`, m.description);
+      
       m.chapters.forEach((c, ci) => {
-        drawChapterHeader(`${mi + 1}.${ci + 1} ${c.name}`, c.isImportant);
+        drawChapterHeader(`${c.name}`, c.isImportant);
 
         if (c.definition) {
           writeLabel('Definition:', [126, 34, 206]);
@@ -497,8 +598,6 @@ export const downloadPdf = (content: NoteContent) => {
           writeLabel('✅ Study Tips:', [5, 150, 105]);
           writeBullets(c.studyTips, [6, 95, 70]);
         }
-
-        // Common Mistakes section intentionally removed per user request
 
         y += 6;
       });
@@ -567,5 +666,5 @@ export const downloadPdf = (content: NoteContent) => {
   }
 
   const safeSubject = sanitizeText(content.subject).replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
-  doc.save(`${safeSubject}_syllabus to notes.pdf`);
+  doc.save(`${safeSubject}_syllabus_to_notes.pdf`);
 };
