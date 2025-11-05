@@ -208,6 +208,7 @@ REMEMBER: This is NOT an outline or summary. You are writing a COMPLETE, DETAILE
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
+          { role: "system", content: "STYLE: Use bullet points with short, clear sentences. Avoid introductions and summaries. Divide into Module 1, Module 2, etc. For each topic include: Meaning (2–3 lines), Definition, Features (each 2–3 lines), Importance/Scope, Advantages, Disadvantages, Differences (as bullets or table), Recent Trends. Use only the provided syllabus content (no extra topics). Target expansive coverage suitable for a 30–100 page PDF." },
           { role: "user", content: userPrompt },
         ],
       }),

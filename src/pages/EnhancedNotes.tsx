@@ -89,7 +89,7 @@ const EnhancedNotes = () => {
 
                       {/* Additional Resources */}
                       <div className="mt-6">
-                        <YouTubeVideos topic={chapter.name} />
+                        <YouTubeVideos topic={`${noteData.subject} ${chapter.name} lecture`} />
                       </div>
                     </div>
                   ))}
@@ -104,7 +104,7 @@ const EnhancedNotes = () => {
                 <h3 className="text-xl font-semibold mb-4">{topic}</h3>
                 
                 <div>
-                  <YouTubeVideos topic={topic} />
+                  <YouTubeVideos topic={`${noteData.subject} ${topic} lecture`} />
                 </div>
               </div>
             ))}
