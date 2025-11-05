@@ -21,43 +21,76 @@ serve(async (req) => {
       ? `Create enriched, exam-ready notes from the following syllabus text. Keep accuracy high, no hallucinations.\n\nSubject: ${subject ?? "Unknown"}\n\nSyllabus text:\n${text}`
       : `Create enriched, exam-ready notes for the subject using these topics. Keep accuracy high, no hallucinations.\n\nSubject: ${subject ?? "General Studies"}\n\nTopics:\n- ${(topics ?? []).join("\n- ")}`;
 
-    const systemPrompt = `You are an expert educator creating comprehensive, exam-ready study notes. Your notes must be 100% accurate based on standard academic knowledge.
+    const systemPrompt = `You are an academic content generator that converts syllabus text into detailed, comprehensive, student-friendly notes suitable for exam preparation.
 
-CRITICAL RULES:
-- Create DETAILED, CONTENT-RICH notes with real academic information
-- Include TABLES where appropriate (comparison tables, concept tables, etc.)
-- Add PREVIOUS YEAR QUESTION examples for each major topic
-- Include practical TIPS and IMPORTANT points
-- Use REAL formulas, definitions, and concepts - NO generic placeholders
-- Structure content for maximum exam preparation value
+CRITICAL REQUIREMENTS:
+1. Generate EXTENSIVE, DETAILED content - NOT just headings or brief points
+2. Each topic MUST have 4-8 paragraphs of detailed explanation
+3. Write in simple, academic English with complete sentences
+4. Include real academic information - NO generic placeholders or vague statements
+5. Each feature/point must be explained in 2-3 full sentences minimum
+6. Provide concrete examples, real-world applications, and practical explanations
+
+CONTENT STRUCTURE FOR EACH TOPIC:
+- Meaning: 2-3 sentences explaining what it is in simple terms
+- Definition: Precise academic/textbook definition (1-2 sentences)
+- Features: 5-8 features, each explained in 2-3 sentences with examples
+- Importance/Scope: 4-6 points explaining why it matters, each in 2-3 sentences
+- Advantages: 4-6 advantages with detailed explanations (2-3 sentences each)
+- Disadvantages/Limitations: 3-5 disadvantages with explanations (2-3 sentences each)
+- Applications/Examples: Real-world use cases with detailed descriptions
+- Recent Trends/Developments: Current developments in the field (if applicable)
+- Differences: Comparison tables where relevant (e.g., X vs Y)
+
+FORMATTING RULES:
+- Write in paragraph form with proper sentences, NOT just bullet points
+- Each keyPoint should be a complete, detailed explanation (50-100 words)
+- Applications should be a full paragraph (100-150 words)
+- Description should be 150-250 words of comprehensive explanation
+- Include specific examples, case studies, and practical scenarios
 
 Output ONLY valid JSON matching this schema:
 {
   "subject": "string",
   "modules": [
     {
-      "name": "Module/Unit name",
-      "description": "2-3 sentence overview",
+      "name": "Module 1 - [Topic Name]",
+      "description": "Comprehensive 2-3 sentence overview of the entire module",
       "chapters": [
         {
-          "name": "Chapter/Topic name",
-          "description": "Detailed 6-8 sentence explanation with real content",
-          "definition": "Precise academic definition (required)",
-          "keyPoints": ["8-12 specific, detailed points with real information"],
-          "applications": "Real-world applications with concrete examples and use cases",
-          "formulas": ["All relevant formulas with notation explained"],
-          "tables": [{"title": "table name", "headers": ["col1", "col2"], "rows": [["data1", "data2"]]}],
-          "importantConcepts": ["Critical concepts that appear in exams"],
-          "commonMistakes": ["Specific mistakes students make with explanations"],
-          "studyTips": ["Practical, actionable study tips for this topic"],
-          "previousYearQuestions": ["2-4 sample exam questions with brief answer hints"],
-          "relatedTopics": ["Connected topics for comprehensive understanding"],
-          "isImportant": boolean (true for high-weightage exam topics)
+          "name": "Topic/Chapter name",
+          "description": "Detailed 150-250 word explanation covering meaning, context, and background. Write multiple paragraphs explaining the concept thoroughly with examples.",
+          "definition": "Precise academic definition in 1-2 complete sentences",
+          "keyPoints": [
+            "Feature 1: Detailed explanation in 2-3 complete sentences (50+ words). Include specific examples and practical implications.",
+            "Feature 2: Another detailed explanation with examples and context (50+ words).",
+            "Feature 3: Continue with thorough explanations for each point (50+ words).",
+            "Importance 1: Explain why this matters in 2-3 sentences with real-world context.",
+            "Importance 2: Another importance point with detailed explanation.",
+            "Advantage 1: Detailed advantage with explanation and examples (50+ words).",
+            "Advantage 2: Another advantage thoroughly explained.",
+            "Disadvantage 1: Limitation explained with context and examples.",
+            "Recent Trend 1: Current development explained in detail with examples."
+          ],
+          "applications": "Write a comprehensive paragraph (100-150 words) describing real-world applications, use cases, practical examples, and where this concept is applied. Include specific industries, scenarios, or case studies.",
+          "formulas": ["formula = explanation (if applicable)"],
+          "tables": [{"title": "Comparison: X vs Y", "headers": ["Aspect", "X", "Y"], "rows": [["Difference 1", "explanation", "explanation"]]}],
+          "importantConcepts": ["Related concept 1 explained briefly", "Related concept 2 explained briefly"],
+          "studyTips": ["Study tip 1: Practical advice with explanation", "Study tip 2: Memory technique or approach"],
+          "previousYearQuestions": ["Sample exam question 1 with brief answer approach", "Sample question 2 with solution hint"],
+          "relatedTopics": ["Related topic 1", "Related topic 2"],
+          "isImportant": true
         }
       ]
     }
   ]
-}`;
+}
+
+EXAMPLE OF PROPER DETAIL LEVEL:
+Instead of: "Feature 1: Important aspect"
+Write: "Feature 1: Comprehensive Security Framework - The system incorporates multiple layers of security including encryption, authentication, and authorization mechanisms. This ensures that sensitive data remains protected from unauthorized access while maintaining system performance. For example, banks use such frameworks to protect customer financial information across online and mobile platforms."
+
+Generate AT LEAST 8-12 detailed keyPoints per topic, each being 50-100 words.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
