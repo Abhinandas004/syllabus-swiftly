@@ -24,8 +24,9 @@ const EnhancedNotes = () => {
   const handleDownload = () => {
     downloadPdf(noteData);
     toast({
-      title: "Download started!",
-      description: "Your PDF is being downloaded.",
+      title: "PDF Downloaded Successfully",
+      description: "Please note: This content is AI-generated and may contain inaccuracies. We recommend reviewing and verifying the information before use for academic purposes.",
+      duration: 8000,
     });
   };
 
