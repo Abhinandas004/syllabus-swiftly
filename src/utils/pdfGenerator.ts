@@ -346,7 +346,7 @@ const sanitizeText = (s: string): string => {
       .replace(/\s+/g, ' ')
       .trim();
     // Remove non-printable / unsupported glyphs
-    t = t.normalize('NFKD').replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
+    t = t.normalize('NFKD').replace(/[^\u0009\u000A\u000D\u0020-\u007E]/g, '');
     return t;
   } catch {
     return s;
