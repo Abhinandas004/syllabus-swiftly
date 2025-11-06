@@ -365,6 +365,9 @@ export const downloadPdf = (content: NoteContent) => {
   const BODY = 11;
   const META = 10;
   const LINE = 6;
+  
+  // Set default font to Times New Roman
+  doc.setFont('times', 'normal');
 
   let y = MARGIN;
 

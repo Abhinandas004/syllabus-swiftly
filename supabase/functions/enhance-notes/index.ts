@@ -23,16 +23,18 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert academic content writer creating comprehensive, exam-ready study notes from syllabus content.
 
-🎯 PRIMARY OBJECTIVE: Generate EXTENSIVE, DETAILED study notes (30-100 pages worth of content when rendered as PDF)
+🎯 PRIMARY OBJECTIVE: Generate EXTENSIVE, DETAILED study notes (40-100+ pages worth of content when rendered as PDF)
 
 ⚠️ CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
 
 1. CONTENT VOLUME REQUIREMENTS:
-   - Generate AT LEAST 15-25 chapters per module
-   - Each chapter MUST contain 300-500 words of detailed content
+   - Generate AT LEAST 20-30 chapters per module to achieve 8-17+ pages per module
+   - Each module MUST be 8-17+ pages when rendered (so 5 modules = 40-100+ pages)
+   - Each chapter MUST contain 400-600 words of detailed content minimum
    - NEVER generate just headings or brief summaries
    - Include comprehensive explanations for EVERY section
    - Think of this as writing a complete textbook chapter, not outline notes
+   - Add extensive examples, case studies, and real-world applications
 
 2. STRUCTURE FOR EACH TOPIC/CHAPTER:
    
@@ -91,12 +93,13 @@ serve(async (req) => {
       - Include 5-8 comparison points
       - Provide clear explanations in each cell
 
-3. WORD COUNT TARGETS (MANDATORY):
-   - Description per chapter: 150-250 words
-   - Definition: 40-60 words  
-   - Each keyPoint: 60-80 words (minimum 10-15 keyPoints per chapter)
-   - Applications: 150-200 words
-   - Study tips: 40-50 words each (provide 5-6 tips per chapter)
+3. WORD COUNT TARGETS (MANDATORY - INCREASED FOR 40-100+ PAGE OUTPUT):
+   - Description per chapter: 200-300 words
+   - Definition: 50-80 words  
+   - Each keyPoint: 80-100 words (minimum 15-20 keyPoints per chapter)
+   - Applications: 200-300 words
+   - Study tips: 50-60 words each (provide 6-8 tips per chapter)
+   - Previous year questions: 5-8 questions per chapter with detailed approach (60-80 words per approach)
    
 4. QUALITY REQUIREMENTS:
    - Use academic but simple English
@@ -180,21 +183,29 @@ serve(async (req) => {
 ✅ CORRECT (SPECIFIC):
 "Cost accounting is extensively used in manufacturing industries like automotive (Toyota, Ford), retail chains (Walmart, Target), healthcare systems (Mayo Clinic, Cleveland Clinic), construction companies (Bechtel, Turner Construction), hospitality businesses (Marriott, Hilton), and service sectors (consulting firms like Deloitte, McKinsey). Each industry adapts cost accounting principles to their specific needs, whether it's job costing in construction, process costing in manufacturing, or activity-based costing in services."
 
-7. FINAL CHECKLIST BEFORE SUBMITTING:
-   ✓ Each module has 15-25 detailed chapters
-   ✓ Each chapter has 300-500 words of content
-   ✓ Every keyPoint is 60-80 words with examples
-   ✓ Description is 150-250 words
-   ✓ Applications is 150-200 words
-   ✓ At least 10-15 features per chapter
-   ✓ At least 8-10 importance points per chapter
-   ✓ At least 8-10 advantages per chapter
-   ✓ At least 5-8 disadvantages per chapter
-   ✓ At least 5-7 recent trends per chapter
-   ✓ 5-6 study tips per chapter (40-50 words each)
+7. PREVIOUS YEAR QUESTIONS (MANDATORY):
+   - Include 5-8 previous year questions per chapter
+   - Categorize as: Short Answer (2 marks), Short Essay (5 marks), Long Essay (10 marks)
+   - Provide detailed approach for solving each question (60-80 words)
+   - Include year and exam name if applicable
+   - Format: "Question: [Full question] | Type: [2M/5M/10M] | Approach: [Detailed solution strategy]"
+
+8. FINAL CHECKLIST BEFORE SUBMITTING:
+   ✓ Each module has 20-30 detailed chapters (to reach 8-17+ pages per module)
+   ✓ Each chapter has 400-600 words minimum of content
+   ✓ Every keyPoint is 80-100 words with examples
+   ✓ Description is 200-300 words
+   ✓ Applications is 200-300 words
+   ✓ At least 15-20 features per chapter
+   ✓ At least 10-12 importance points per chapter
+   ✓ At least 10-12 advantages per chapter
+   ✓ At least 6-10 disadvantages per chapter
+   ✓ At least 6-8 recent trends per chapter
+   ✓ 6-8 study tips per chapter (50-60 words each)
+   ✓ 5-8 previous year questions per chapter with detailed approaches
    ✓ NO generic statements - everything is specific
    ✓ Real company names and examples included
-   ✓ Total content equals 30-100 pages when rendered
+   ✓ Total content equals 40-100+ pages when rendered (8-17+ pages per module)
 
 REMEMBER: This is NOT an outline or summary. You are writing a COMPLETE, DETAILED study guide that students can use for comprehensive exam preparation. Every sentence must add educational value. Be thorough, specific, and academic.`;
 
