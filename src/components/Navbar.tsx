@@ -12,6 +12,7 @@ const Navbar = () => {
     { name: "About Us", path: "/about" },
     { name: "Premium", path: "/premium" },
     { name: "Notes Library", path: "/library" },
+    { name: "My Notes", path: "/saved-notes" },
     { name: "FAQ", path: "/faq" },
     { name: "Contact", path: "/contact" },
   ];

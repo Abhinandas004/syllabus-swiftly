@@ -643,6 +643,126 @@ export const downloadPdf = (content: NoteContent) => {
     }
   }
 
+  // Previous Year Questions Section - Module wise
+  if (content.modules) {
+    doc.addPage();
+    y = MARGIN;
+    
+    doc.setFontSize(20);
+    doc.setFont('times', 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text('PREVIOUS YEAR QUESTIONS', pageWidth / 2, y, { align: 'center' });
+    y += 15;
+    
+    doc.setFontSize(12);
+    doc.setFont('times', 'italic');
+    doc.setTextColor(100, 100, 100);
+    doc.text('Module-wise Question Bank', pageWidth / 2, y, { align: 'center' });
+    y += 15;
+    
+    content.modules.forEach((mod, modIdx) => {
+      addBreak(25);
+      
+      // Module header
+      doc.setFillColor(124, 58, 237);
+      doc.roundedRect(MARGIN, y, pageWidth - 2 * MARGIN, 12, 2, 2, 'F');
+      doc.setFont('times', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(255, 255, 255);
+      doc.text(`Module ${modIdx + 1}: ${sanitizeText(mod.name)}`, MARGIN + 5, y + 8);
+      y += 18;
+      
+      // Questions by type
+      const shortAnswers: string[] = [];
+      const shortEssays: string[] = [];
+      const longEssays: string[] = [];
+      
+      mod.chapters.forEach(ch => {
+        if (ch.previousYearQuestions?.length) {
+          ch.previousYearQuestions.forEach(q => {
+            if (q.toLowerCase().includes('2m') || q.toLowerCase().includes('2 mark')) {
+              shortAnswers.push(q);
+            } else if (q.toLowerCase().includes('5m') || q.toLowerCase().includes('5 mark')) {
+              shortEssays.push(q);
+            } else if (q.toLowerCase().includes('10m') || q.toLowerCase().includes('10 mark') || q.toLowerCase().includes('15 mark')) {
+              longEssays.push(q);
+            } else {
+              shortAnswers.push(q); // Default to short answer
+            }
+          });
+        }
+      });
+      
+      // Short Answer Questions (2 Marks)
+      if (shortAnswers.length > 0) {
+        addBreak(15);
+        doc.setFont('times', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(245, 158, 11);
+        doc.text('Short Answer Questions (2 Marks)', MARGIN, y);
+        y += 8;
+        
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        shortAnswers.forEach((q, idx) => {
+          const qText = sanitizeText(q);
+          const lines = doc.splitTextToSize(`${idx + 1}. ${qText}`, pageWidth - 2 * MARGIN - 5);
+          addBreak(lines.length * 5 + 4);
+          doc.text(lines, MARGIN + 3, y);
+          y += lines.length * 5 + 3;
+        });
+        y += 5;
+      }
+      
+      // Short Essay Questions (5 Marks)
+      if (shortEssays.length > 0) {
+        addBreak(15);
+        doc.setFont('times', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(59, 130, 246);
+        doc.text('Short Essay Questions (5 Marks)', MARGIN, y);
+        y += 8;
+        
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        shortEssays.forEach((q, idx) => {
+          const qText = sanitizeText(q);
+          const lines = doc.splitTextToSize(`${idx + 1}. ${qText}`, pageWidth - 2 * MARGIN - 5);
+          addBreak(lines.length * 5 + 4);
+          doc.text(lines, MARGIN + 3, y);
+          y += lines.length * 5 + 3;
+        });
+        y += 5;
+      }
+      
+      // Long Essay Questions (10/15 Marks)
+      if (longEssays.length > 0) {
+        addBreak(15);
+        doc.setFont('times', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(220, 38, 38);
+        doc.text('Long Essay Questions (10/15 Marks)', MARGIN, y);
+        y += 8;
+        
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        longEssays.forEach((q, idx) => {
+          const qText = sanitizeText(q);
+          const lines = doc.splitTextToSize(`${idx + 1}. ${qText}`, pageWidth - 2 * MARGIN - 5);
+          addBreak(lines.length * 5 + 4);
+          doc.text(lines, MARGIN + 3, y);
+          y += lines.length * 5 + 3;
+        });
+        y += 5;
+      }
+      
+      y += 8;
+    });
+  }
+  
   // Footer note
   addBreak(28);
   doc.setFillColor(239, 246, 255);
@@ -650,11 +770,11 @@ export const downloadPdf = (content: NoteContent) => {
   doc.setDrawColor(37, 99, 235);
   doc.setLineWidth(0.5);
   doc.line(MARGIN, y, pageWidth - MARGIN, y);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('times', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(37, 99, 235);
   doc.text('SyllabusToNotes.com', pageWidth / 2, y + 14, { align: 'center' });
-  doc.setFont(undefined, 'normal');
+  doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(107, 114, 128);
   doc.text('AI-Powered Comprehensive Study Notes', pageWidth / 2, y + 22, { align: 'center' });

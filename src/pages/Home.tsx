@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, Download, CheckCircle, Star, Sparkles, Lock, Eye } from "lucide-react";
+import { Upload, FileText, Download, CheckCircle, Star, Sparkles, Lock, Eye, Save } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import heroBanner from "@/assets/hero-banner.jpg";
@@ -316,6 +316,42 @@ const Home = () => {
     }
   };
 
+  const handleSaveNote = async () => {
+    if (!generatedNote) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to save notes.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.from("saved_notes").insert({
+        title: generatedNote.title,
+        subject: generatedNote.subject,
+        content: generatedNote as any,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Note saved successfully",
+        description: "You can access it anytime from your saved notes.",
+      });
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save note. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {generatedNote && showPreview && (
@@ -324,9 +360,13 @@ const Home = () => {
             <div className="p-6 border-b flex items-center justify-between">
               <h2 className="text-2xl font-bold">{generatedNote.title}</h2>
               <div className="flex gap-2">
-                <Button onClick={handleViewEnhanced} variant="default">
+                <Button onClick={handleSaveNote} variant="default">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button onClick={handleViewEnhanced} variant="secondary">
                   <Eye className="h-4 w-4 mr-2" />
-                  View with Resources
+                  View
                 </Button>
                 <Button onClick={handleDownloadPdf} variant="secondary">
                   <Download className="h-4 w-4 mr-2" />
