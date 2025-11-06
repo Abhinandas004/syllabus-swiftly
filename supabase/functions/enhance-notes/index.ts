@@ -44,10 +44,11 @@ serve(async (req) => {
       - Include 2-3 relatable examples
       Example: "Cost accounting refers to the process of recording, classifying, analyzing, and allocating costs associated with production. It helps businesses understand where money is being spent and identify areas for cost reduction. Unlike financial accounting which focuses on external reporting, cost accounting is primarily used for internal management decision-making. For instance, a manufacturing company uses cost accounting to determine the cost per unit of production, helping managers set appropriate pricing strategies."
 
-   B) DEFINITION (Must be 40-60 words):
-      - Provide precise academic/textbook definition
-      - Include key terminology
-      - Cite the fundamental principle
+   B) DEFINITION (ONLY IF EXPLICITLY MENTIONED IN SYLLABUS - Must be 40-60 words):
+      - CRITICAL: Only include definition if the syllabus specifically mentions or defines the term
+      - If the syllabus doesn't provide a definition, SKIP this section entirely
+      - Do not create definitions for concepts that don't have formal definitions in the source material
+      - When included: Provide precise academic/textbook definition with key terminology
       Example: "Cost accounting is a systematic method of accounting that aims to capture a company's total cost of production by assessing variable costs at each stage and fixed costs such as depreciation. It is a form of managerial accounting used to make informed business decisions by management."
 
    C) FEATURES (Must generate 10-15 features, EACH 60-80 words):
@@ -122,7 +123,7 @@ serve(async (req) => {
         {
           "name": "Chapter/Topic Name",
           "description": "[150-250 WORDS] Detailed explanation of the concept including meaning, context, background, and significance. Write multiple complete paragraphs with examples.",
-          "definition": "[40-60 WORDS] Precise academic definition with key terminology",
+          "definition": "[OPTIONAL - ONLY IF IN SYLLABUS] [40-60 WORDS] Precise academic definition with key terminology. OMIT this field entirely if the syllabus doesn't provide a formal definition.",
           "keyPoints": [
             "[60-80 WORDS] Feature 1: Clear title - Detailed explanation in 3-4 complete sentences with specific examples and practical implications",
             "[60-80 WORDS] Feature 2: Clear title - Another thorough explanation with real-world context",

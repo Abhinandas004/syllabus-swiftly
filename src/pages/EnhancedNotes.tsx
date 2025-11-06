@@ -88,8 +88,18 @@ const EnhancedNotes = () => {
                       )}
 
                       {/* Additional Resources */}
-                      <div className="mt-6">
-                        <YouTubeVideos topic={`${noteData.subject} ${chapter.name} lecture`} />
+                      <div className="mt-6 space-y-6">
+                        <div>
+                          <h4 className="font-semibold mb-3 text-lg">📺 Video Lectures</h4>
+                          <YouTubeVideos topic={`${noteData.subject} ${chapter.name} lecture`} />
+                        </div>
+                        
+                        {chapter.previousYearQuestions && chapter.previousYearQuestions.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold mb-3 text-lg">📝 Previous Year & Important Questions</h4>
+                            <YouTubeVideos topic={`${noteData.subject} ${chapter.name} previous year questions solved`} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

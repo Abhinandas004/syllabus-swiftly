@@ -358,6 +358,9 @@ export const downloadPdf = (content: NoteContent) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
+  // Set Times New Roman as default font throughout the document
+  doc.setFont('times', 'normal');
+
   const MARGIN = 20;
   const TITLE = 24;
   const MODULE = 16;
@@ -391,7 +394,7 @@ export const downloadPdf = (content: NoteContent) => {
   // Course name centered
   doc.setFontSize(22);
   doc.setTextColor(0, 0, 0);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('times', 'bold');
   doc.text(sanitizeText(content.subject.toUpperCase()), pageWidth / 2, y, { align: 'center' });
   
   y += 20;
@@ -399,7 +402,7 @@ export const downloadPdf = (content: NoteContent) => {
   // Subtitle if course code exists
   if (content.courseCode) {
     doc.setFontSize(14);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('times', 'normal');
     doc.text(`(${sanitizeText(content.courseCode)})`, pageWidth / 2, y, { align: 'center' });
     y += 15;
   }
@@ -407,7 +410,7 @@ export const downloadPdf = (content: NoteContent) => {
   // Syllabus to Notes text
   y += 10;
   doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('times', 'bold');
   doc.setTextColor(37, 99, 235);
   doc.text('SYLLABUS TO NOTES', pageWidth / 2, y, { align: 'center' });
   
@@ -415,12 +418,12 @@ export const downloadPdf = (content: NoteContent) => {
   y = pageHeight - 50;
   doc.setFontSize(14);
   doc.setTextColor(0, 0, 0);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('times', 'bold');
   doc.text('SyllabusToNotes.com', pageWidth / 2, y, { align: 'center' });
   
   y += 10;
   doc.setFontSize(10);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('times', 'normal');
   doc.setTextColor(100, 100, 100);
   doc.text('AI-Powered Comprehensive Study Notes', pageWidth / 2, y, { align: 'center' });
   
@@ -438,13 +441,13 @@ export const downloadPdf = (content: NoteContent) => {
     
     doc.setFontSize(20);
     doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('times', 'bold');
     doc.text('CONTENTS', pageWidth / 2, y, { align: 'center' });
     
     y += 20;
     
     doc.setFontSize(12);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('times', 'normal');
     
     content.modules.forEach((module, idx) => {
       if (y > pageHeight - 30) {
@@ -452,7 +455,7 @@ export const downloadPdf = (content: NoteContent) => {
         y = MARGIN;
       }
       
-      doc.setFont(undefined, 'bold');
+      doc.setFont('times', 'bold');
       doc.text(`${idx + 1}. ${sanitizeText(module.name)}`, MARGIN + 5, y);
       y += 8;
       
@@ -461,7 +464,7 @@ export const downloadPdf = (content: NoteContent) => {
           doc.addPage();
           y = MARGIN;
         }
-        doc.setFont(undefined, 'normal');
+        doc.setFont('times', 'normal');
         const chapterText = `   ${idx + 1}.${chIdx + 1} ${sanitizeText(chapter.name)}`;
         doc.text(chapterText, MARGIN + 10, y);
         y += 6;
@@ -486,7 +489,7 @@ export const downloadPdf = (content: NoteContent) => {
     
     doc.setFontSize(MODULE);
     doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('times', 'bold');
     doc.text(sanitizeText(label), MARGIN + 5, y + 12);
     y += 28;
     
@@ -494,7 +497,7 @@ export const downloadPdf = (content: NoteContent) => {
     if (description) {
       doc.setFontSize(BODY);
       doc.setTextColor(60, 60, 60);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('times', 'normal');
       const descLines = doc.splitTextToSize(sanitizeText(description), pageWidth - 2 * MARGIN - 10);
       doc.text(descLines, MARGIN + 5, y);
       y += descLines.length * LINE + 10;
@@ -505,7 +508,7 @@ export const downloadPdf = (content: NoteContent) => {
     addBreak(15);
     
     doc.setFontSize(CHAPTER);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('times', 'bold');
     doc.setTextColor(0, 0, 0);
     doc.text(sanitizeText(label), MARGIN, y);
     
@@ -563,9 +566,9 @@ export const downloadPdf = (content: NoteContent) => {
 
         if (c.definition) {
           writeLabel('Definition:', [126, 34, 206]);
-          doc.setFont(undefined, 'italic');
+          doc.setFont('times', 'italic');
           writeParagraph(c.definition, [75, 85, 99]);
-          doc.setFont(undefined, 'normal');
+          doc.setFont('times', 'normal');
         }
 
         writeLabel('Overview:', [75, 85, 99]);
@@ -581,7 +584,7 @@ export const downloadPdf = (content: NoteContent) => {
 
         if (c.formulas?.length) {
           writeLabel('🔢 Formulas:', [3, 105, 161]);
-          doc.setFont('courier', 'normal');
+          doc.setFont('times', 'normal');
           doc.setTextColor(12, 74, 110);
           for (const f of c.formulas) {
             const split = doc.splitTextToSize(f, pageWidth - 2 * MARGIN - 16);
@@ -591,7 +594,7 @@ export const downloadPdf = (content: NoteContent) => {
             doc.text(split, MARGIN + 10, y);
             y += split.length * LINE + 6;
           }
-          doc.setFont(undefined, 'normal');
+          doc.setFont('times', 'normal');
         }
 
         writeLabel('💡 Practical Applications:', [30, 64, 175]);
@@ -610,18 +613,18 @@ export const downloadPdf = (content: NoteContent) => {
     addBreak(20);
     doc.setFontSize(MODULE);
     doc.setTextColor(124, 58, 237);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('times', 'bold');
     doc.text('📚 Topics Covered:', MARGIN, y);
     y += 12;
 
     doc.setFontSize(BODY);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('times', 'normal');
     for (let i = 0; i < content.topics.length; i++) {
       addBreak(20);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('times', 'bold');
       doc.text(`${i + 1}. ${content.topics[i]}`, MARGIN, y);
       y += 7;
-      doc.setFont(undefined, 'normal');
+      doc.setFont('times', 'normal');
       const desc = getTopicDescription(content.topics[i]);
       const split = doc.splitTextToSize(desc, pageWidth - 2 * MARGIN);
       addBreak(split.length * LINE + 8);
@@ -629,10 +632,10 @@ export const downloadPdf = (content: NoteContent) => {
       y += split.length * LINE + 6;
 
       const kps = getKeyPoints(content.topics[i]);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('times', 'bold');
       doc.text('Key Points:', MARGIN + 5, y);
       y += 7;
-      doc.setFont(undefined, 'normal');
+      doc.setFont('times', 'normal');
       for (const kp of kps) {
         const s = doc.splitTextToSize(`- ${sanitizeText(kp)}`, pageWidth - 2 * MARGIN - 10);
         addBreak(s.length * LINE + 4);
