@@ -25,19 +25,24 @@ const SavedNotes = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        loadSavedNotes();
+      }
+    });
+
     loadSavedNotes();
-  }, []);
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const loadSavedNotes = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to view saved notes.",
-          variant: "destructive",
-        });
-        navigate("/");
+        navigate("/auth");
         return;
       }
 

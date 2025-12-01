@@ -323,10 +323,11 @@ const Home = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
-          title: "Authentication required",
-          description: "Please sign in to save notes.",
+          title: "Sign in required",
+          description: "Please sign in to save your notes.",
           variant: "destructive",
         });
+        navigate("/auth");
         return;
       }
 
