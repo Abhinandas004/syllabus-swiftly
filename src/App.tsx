@@ -16,6 +16,7 @@ import Terms from "./pages/Terms";
 import EnhancedNotes from "./pages/EnhancedNotes";
 import NotFound from "./pages/NotFound";
 import SavedNotes from "./pages/SavedNotes";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/notes" element={<EnhancedNotes />} />
               <Route path="/saved-notes" element={<SavedNotes />} />
+              <Route path="/auth" element={<Auth />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
